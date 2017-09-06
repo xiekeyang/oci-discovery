@@ -52,7 +52,13 @@ $ curl -H 'Accept: application/vnd.oci.image.index.v1+json' https://a.b.example.
       },
       "annotations": {
         "org.opencontainers.image.ref.name": "1.0"
-      }
+      },
+      "casEngines": [
+        {
+          "protocol": "oci-cas-template-v1",
+          "uri": "https://a.example.com/cas/{algorithm}/{encoded:2}/{encoded}"
+        }
+      ]
     },
     {
       "mediaType": "application/xml",
@@ -61,11 +67,19 @@ $ curl -H 'Accept: application/vnd.oci.image.index.v1+json' https://a.b.example.
       "annotations": {
         "org.freedesktop.specifications.metainfo.version": "1.0",
         "org.freedesktop.specifications.metainfo.type": "AppStream"
-      }
+      },
+      "casEngines": [
+        {
+          "protocol": "oci-cas-template-v1",
+          "uri": "https://b.example.com/cas/{algorithm}/{encoded}"
+        }
+      ]
     }
   ]
 }
 ```
+
+The [`oci-cas-template-v1` protocol](cas-template.md) is [registered](cas-engine-protocols.md).
 
 Deciding whether to look for `1.0` (the `fragment`) or the full `a.b.example.com/c/d#1.0` name is left as an exercise for the reader, as is switching based on `platform` entries or [chosing between multiple entries with the same name][duplicate-name-resolution].
 

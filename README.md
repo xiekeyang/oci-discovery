@@ -5,10 +5,12 @@ This repository contains the [OCI Ref-engine Discovery specification](ref-engine
 * [Host-Based Image Names](host-based-image-names.md)
 * [OCI Ref-engine Discovery](ref-engine-discovery.md).
 * [OCI Index Template Protocol](index-template.md)
+* [OCI CAS Template Protocol](cas-template.md)
 
-This repository also contains a registry for ref-engine protocols:
+This repository also contains registries for ref- and CAS-engine protocols:
 
 * [Ref-Engine Protocols](ref-engine-prococols.md).
+* [CAS-Engine Protocols](cas-engine-protocols.md).
 
 The strategies in these specifications are inspired by some previous implementations:
 

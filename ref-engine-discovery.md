@@ -69,7 +69,13 @@ Each entry in the `refEngines` array MUST be an [objects][rfc7159-s4] with at le
 Consumers SHOULD ignore entries which declare unsupported `protocol` values.
 The order of entries in the array is not significant.
 
-### Example
+The ref-engine discovery service MAY also include `casEngines` entry if it wants to supplement suggestions made by the ref engines.
+If set, the `refEngines` entry MUST be an [array][rfc7159-s5].
+Each entry in the `refEngines` array MUST be an [objects][rfc7159-s4] with at least a `protocol` entry specifying the [cas-engine protocol](cas-engine-protocols.md).
+Consumers SHOULD ignore entries which declare unsupported `protocol` values.
+The order of entries in the array is not significant.
+
+### Example 1
 
 ```
 $ curl -H 'Accept: application/vnd.oci.ref-engines.v1+json' https://a.b.example.com/.well-known/oci-host-ref-engines
@@ -91,6 +97,29 @@ $ curl -H 'Accept: application/vnd.oci.ref-engines.v1+json' https://a.b.example.
 
 The [`oci-index-template-v1` protocol](index-template.md) is [registered](ref-engine-protocols.md).
 The `docker` protocol is currently [unregistered](ref-engine-protocols.md), and is given as sketch of a possible extention protocol.
+
+### Example 2
+
+```
+$ curl -H 'Accept: application/vnd.oci.ref-engines.v1+json' https://example.com/.well-known/oci-host-ref-engines
+{
+  "refEngines": [
+    {
+      "protocol": "oci-index-template-v1",
+      "uri": "https://{host}/ref/{name}"
+    }
+  ],
+  "casEngines": [
+    {
+      "protocol": "oci-cas-template-v1",
+      "uri": "https://a.example.com/cas/{algorithm}/{encoded:2}/{encoded}"
+    }
+  ],
+}
+```
+
+The [`oci-index-template-v1` protocol](index-template.md) is [registered](ref-engine-protocols.md).
+The [`oci-cas-template-v1` protocol](cas-template.md) is [registered](cas-engine-protocols.md).
 
 [CAS]: https://en.wikipedia.org/wiki/Content-addressable_storage
 [descriptor]: https://github.com/opencontainers/image-spec/blob/v1.0.0/descriptor.md
