@@ -1,13 +1,19 @@
-# README
+# OCI Image Discovery Specifications
 
-This repository is to present the [discovery specification](DESIGN-SPEC.md) OCI image discovery functionality, as part of [image-spec](https://github.com/opencontainers/image-spec). 
+This repository contains the [OCI Ref-engine Discovery specification](ref-engine-discovery.md) and related specifications as an extention to the [image specification][image-spec]:
 
-For OCI image distibution is a complex and wide system, and much implementation should will done, [discovery specification](DESIGN-SPEC.md) document just be separated from that, to achieve only consensual image discovery protocol.
+* [Host-Based Image Names](host-based-image-names.md)
+* [OCI Ref-engine Discovery](ref-engine-discovery.md).
+* [OCI Index Template Protocol](index-template.md)
 
-The strategies in this document refer to existing great open implementations.
+This repository also contains a registry for ref-engine protocols:
+
+* [Ref-Engine Protocols](ref-engine-prococols.md).
+
+The strategies in these specifications are inspired by some previous implementations:
 
 * [ABD](https://github.com/appc/abd/blob/master/abd.md)
-
 * [App Container Image Discovery](https://github.com/appc/spec/blob/v0.8.10/spec/discovery.md)
-
 * [parcel](https://github.com/cyphar/parcel)
+
+[image-spec]: https://github.com/opencontainers/image-spec
