@@ -154,6 +154,43 @@ To publish additional images matching the `example.com/app#…` family of [host-
 To publish additional images matching new families (e.g. `example.com/other-app#…`), add their entries to new `/srv/example.com/oci-index/` indexes (e.g. `/srv/example.com/oci-index/other-app`).
 All the CAS blobs can go in the same bucket under `/srv/example.com/oci-cas`, although if you want you can adjust the `casEngines` entries and keep CAS blobs in different buckets.
 
+## Example: Serving OCI layouts from Nginx
+
+As an alternative to the [previous example](#example-serving-everything-from-one-nginx-server), you can bucket your CAS blobs by serving [OCI layouts][layout] directly.
+If your layout `index.json` are not setting `casEngines` and you are unwilling to update them to do so, you can [set `casEngines` in you ref-engines object](ref-engine-discovery.md#ref-engines-objects) at `/srv/example.com/.well-known/oci-host-ref-engines`:
+
+```json
+{
+  "refEngines": [
+    {
+      "protocol": "oci-index-template-v1",
+      "uri": "https://{host}/oci-image/{path}/index.json"
+    }
+  ],
+  "casEngines": [
+    {
+      "protocol": "oci-cas-template-v1",
+      "uri": "https://example.com/oci-image/{path}/blobs/{algorithm}/{encoded}"
+    }
+  ]
+}
+```
+
+Then copy your [layout directories][layout] under `/srv/example.com/oci-image/{path}` to deploy them.
+
+The Nginx config from the [previous example](#example-serving-everything-from-one-nginx-server) would need an adjusted [`location`][location] for the index media type:
+
+```
+location ~ ^/oci-image/.*/index.json$ {
+  types  {}
+  default_type  application/vnd.oci.image.index.v1+json;
+  charset  utf-8;
+  charset_types  *;
+}
+```
+
 [image-spec]: https://github.com/opencontainers/image-spec
 [image-spec-canonical-json]: https://github.com/opencontainers/image-spec/blob/v1.0.0/considerations.md#json
+[layout]: https://github.com/opencontainers/image-spec/blob/v1.0.0/image-layout.md
+[location]: http://nginx.org/en/docs/http/ngx_http_core_module.html#location
 [Nginx]: https://nginx.org/
