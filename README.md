@@ -3,13 +3,17 @@
 This repository contains the [OCI Ref-engine Discovery specification](ref-engine-discovery.md) and related specifications as an extention to the [image specification][image-spec]:
 
 * [Host-Based Image Names](host-based-image-names.md)
+    There is a [Python 3][python3] implementation in [`oci_discovery.host_based_image_names`](oci_discovery/host_based_image_names).
 * [OCI Ref-engine Discovery](ref-engine-discovery.md).
+    There is a Python 3 implementation in [`oci_discovery.ref_engine_discovery`](oci_discovery/ref_engine_discovery).
 * [OCI Index Template Protocol](index-template.md)
+    There is a Python 3 implementation in [`oci_discovery.ref_engine.oci_index_template`](oci_discovery/ref_engine/oci_index_template).
 * [OCI CAS Template Protocol](cas-template.md)
 
 This repository also contains registries for ref- and CAS-engine protocols:
 
 * [Ref-Engine Protocols](ref-engine-prococols.md).
+    There is a Python 3 implementation in [`oci_discovery.ref_engine.CONSTRUCTORS`](oci_discovery/ref_engine/__init__.py).
 * [CAS-Engine Protocols](cas-engine-protocols.md).
 
 The strategies in these specifications are inspired by some previous implementations:
@@ -17,6 +21,66 @@ The strategies in these specifications are inspired by some previous implementat
 * [ABD](https://github.com/appc/abd/blob/master/abd.md)
 * [App Container Image Discovery](https://github.com/appc/spec/blob/v0.8.10/spec/discovery.md)
 * [parcel](https://github.com/cyphar/parcel)
+
+## Using the Python 3 ref-engine discovery tool
+
+The individual components are usable as libraries, but the ref-engine discovery implementation can also be used from the command line:
+
+```
+$ python -m oci_discovery.ref_engine_discovery -l debug example.com/app#1.0 2>/tmp/log
+{
+  "example.com/app#1.0": {
+    "roots": [
+      {
+        "annotations": {
+          "org.opencontainers.image.ref.name": "1.0"
+        },
+        "casEngines": [
+          {
+            "protocol": "oci-cas-template-v1",
+            "uri": "https://a.example.com/cas/{algorithm}/{encoded:2}/{encoded}"
+          }
+        ],
+        "digest": "sha256:e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3",
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "platform": {
+          "architecture": "ppc64le",
+          "os": "linux"
+        },
+        "size": 799
+      }
+    ]
+  }
+}
+$ cat /tmp/log
+DEBUG:oci_discovery.ref_engine_discovery:discovering ref engines via https://example.com/.well-known/oci-host-ref-engines
+WARNING:oci_discovery.ref_engine_discovery:failed to fetch https://example.com/.well-known/oci-host-ref-engines (<urlopen error [SSL: UNKNOWN_PROTOCOL] unknown protocol (_ssl.c:600)>)
+DEBUG:oci_discovery.ref_engine_discovery:discovering ref engines via http://example.com/.well-known/oci-host-ref-engines
+DEBUG:oci_discovery.ref_engine_discovery:received ref-engine discovery object:
+{'refEngines': [{'protocol': 'oci-index-template-v1',
+                 'uri': 'http://{host}/oci-index/{path}'}]}
+DEBUG:oci_discovery.ref_engine.oci_index_template:fetching an OCI index for example.com/app#1.0 from http://example.com/oci-index/app
+DEBUG:oci_discovery.ref_engine.oci_index_template:received OCI index object:
+{'manifests': [{'annotations': {'org.opencontainers.image.ref.name': '1.0'},
+                'casEngines': [{'protocol': 'oci-cas-template-v1',
+                                'uri': 'https://a.example.com/cas/{algorithm}/{encoded:2}/{encoded}'}],
+                'digest': 'sha256:e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3',
+                'mediaType': 'application/vnd.oci.image.manifest.v1+json',
+                'platform': {'architecture': 'ppc64le', 'os': 'linux'},
+                'size': 799},
+               {'annotations': {'org.freedesktop.specifications.metainfo.type': 'AppStream',
+                                'org.freedesktop.specifications.metainfo.version': '1.0'},
+                'casEngines': [{'protocol': 'oci-cas-template-v1',
+                                'uri': 'https://b.example.com/cas/{algorithm}/{encoded}'}],
+                'digest': 'sha256:b3d63d132d21c3ff4c35a061adf23cf43da8ae054247e32faa95494d904a007e',
+                'mediaType': 'application/xml',
+                'size': 7143}],
+ 'schemaVersion': 2}
+```
+
+Consumers who are trusting images based on the ref-engine discovery and ref-engine servers are encouraged to use `--https-only`.
+
+Consumers who are trusting images based on a property of the Merkle tree (e.g. [like this][signed-name-assertions]) can safely perform ref-engine discovery and ref-resolution over HTTP, although they may still want to use `--https-only` to protect from sniffers.
 
 ## Example: Serving everything from one Nginx server
 
@@ -194,3 +258,5 @@ location ~ ^/oci-image/.*/index.json$ {
 [layout]: https://github.com/opencontainers/image-spec/blob/v1.0.0/image-layout.md
 [location]: http://nginx.org/en/docs/http/ngx_http_core_module.html#location
 [Nginx]: https://nginx.org/
+[python3]: https://docs.python.org/3/
+[signed-name-assertions]: https://github.com/opencontainers/image-spec/issues/176
