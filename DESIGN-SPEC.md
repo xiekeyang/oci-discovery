@@ -1,1 +1,0 @@
-# OCI Image Discovery
