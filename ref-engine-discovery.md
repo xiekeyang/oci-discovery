@@ -46,7 +46,7 @@ Related information: None
 ## Images associated with a host's `oci-host-ref-engines`
 
 Publishers SHOULD populate the `oci-host-ref-engines` resource with ref engines which are capable of resolving image names that match the [`host-based-image-name` rule](host-based-image-names.md) with a `host` part that matching their [fully qualified domain name][rfc1594-s5.2] and its subdomains or deeper descendants.
-For example, https://b.example.com/.well-known/oci-host-ref-engines SHOULD prefer ref engines capable of resolving image names with `host` parts matching `b.example.com`, `a.b.example.com`, etc.
+For example, `https://b.example.com/.well-known/oci-host-ref-engines` SHOULD prefer ref engines capable of resolving image names with `host` parts matching `b.example.com`, `a.b.example.com`, etc.
 Some publishers MAY provide discovery services for generic image names (for example, to provide a company policy for ref-engine suggestions).
 Those publishers MAY provide those recommendations via a [ref-engines resource](#ref-engines-media-types) at a URI of their choosing, but they SHOULD NOT serve the generic resource from `oci-host-ref-engines` to avoid distracting consumers following the protocol discussed in the following paragraph.
 
