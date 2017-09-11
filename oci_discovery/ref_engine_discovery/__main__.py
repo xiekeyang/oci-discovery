@@ -35,11 +35,15 @@ parser.add_argument(
     help='Log verbosity.  Defaults to {!r}.'.format(
         logging.getLevelName(log.level).lower()))
 parser.add_argument(
-    '--https-only',
-    action='store_const',
-    const=True,
-    help='Log verbosity.  Defaults to {!r}.'.format(
-        logging.getLevelName(log.level).lower()))
+    '--protocol',
+    action='append',
+    choices=['http', 'https'],
+    help=(
+        'Protocol to use for ref-engine discovery.  May be specified multiple '
+        'times, in which case the protocols will be attempted in the order '
+        'specified (looping through all possible hosts for the first '
+        'protocol, and then through all possible hosts for the second '
+        'protocol, etc.).  Defaults to https,http.'))
 
 args = parser.parse_args()
 
@@ -47,14 +51,13 @@ if args.log_level:
     level = getattr(logging, args.log_level.upper())
     log.setLevel(level)
 
-protocols = ['https']
-if not args.https_only:
-    protocols.append('http')
+if args.protocol is None:
+    args.protocol = ('https', 'http')
 
 resolved = {}
 for name in args.names:
     try:
-        resolved[name] = resolve(name=name, protocols=protocols)
+        resolved[name] = resolve(name=name, protocols=args.protocol)
     except ValueError as error:
         log.error(error)
 json.dump(

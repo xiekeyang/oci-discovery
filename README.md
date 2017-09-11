@@ -90,9 +90,9 @@ DEBUG:oci_discovery.ref_engine.oci_index_template:received OCI index object:
  'schemaVersion': 2}
 ```
 
-Consumers who are trusting images based on the ref-engine discovery and ref-engine servers are encouraged to use `--https-only`.
+Consumers who are trusting images based on the ref-engine discovery and ref-engine servers are encouraged to use `--protocol=https`.
 
-Consumers who are trusting images based on a property of the Merkle tree (e.g. [like this][signed-name-assertions]) can safely perform ref-engine discovery and ref-resolution over HTTP, although they may still want to use `--https-only` to protect from sniffers.
+Consumers who are trusting images based on a property of the Merkle tree (e.g. [like this][signed-name-assertions]) can safely perform ref-engine discovery and ref-resolution over HTTP, although they may still want to use `--protocol=https` to protect from sniffers.
 
 ## Example: Serving everything from one Nginx server
 
