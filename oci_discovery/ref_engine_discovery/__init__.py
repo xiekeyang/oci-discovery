@@ -59,7 +59,7 @@ def resolve(name, protocols=('https', 'http')):
                     continue
                 try:
                     roots = list(ref_engine.resolve(name=name))
-                except _urllib_error.URLError as error:
+                except _urllib_error.HTTPError as error:
                     _LOGGER.warning('failed to fetch {} ({})'.format(
                         error.geturl(), error))
                     continue
