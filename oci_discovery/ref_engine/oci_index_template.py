@@ -15,6 +15,11 @@
 import logging as _logging
 import pprint as _pprint
 
+try:
+    import uritemplate as _uritemplate
+except ImportError as error:
+    from .. import uri_template as _uritemplate
+
 from .. import fetch_json as _fetch_json
 from .. import host_based_image_names as _host_based_image_names
 
@@ -30,16 +35,11 @@ class Engine(object):
             self.uri_template)
 
     def __init__(self, uri):
-        self.uri_template = uri
+        self.uri_template = _uritemplate.URITemplate(uri=uri)
 
     def resolve(self, name):
         name_parts = _host_based_image_names.parse(name=name)
-        try:
-            uri = self.uri_template.format(**name_parts)
-        except KeyError as error:
-            raise ValueError(
-                'failed to format {}'.format(self.uri_template)
-            ) from error
+        uri = self.uri_template.expand(**name_parts)
         _LOGGER.debug('fetching an OCI index for {} from {}'.format(name, uri))
         index = _fetch_json.fetch(
             uri=uri,
