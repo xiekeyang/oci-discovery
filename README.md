@@ -27,7 +27,7 @@ The strategies in these specifications are inspired by some previous implementat
 The individual components are usable as libraries, but the ref-engine discovery implementation can also be used from the command line:
 
 ```
-$ python -m oci_discovery.ref_engine_discovery -l debug example.com/app#1.0 2>/tmp/log
+$ python3 -m oci_discovery.ref_engine_discovery -l debug example.com/app#1.0 2>/tmp/log
 {
   "example.com/app#1.0": {
     "roots": [
