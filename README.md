@@ -22,6 +22,18 @@ The strategies in these specifications are inspired by some previous implementat
 * [App Container Image Discovery](https://github.com/appc/spec/blob/v0.8.10/spec/discovery.md)
 * [parcel](https://github.com/cyphar/parcel)
 
+## Python dependencies
+
+The [OCI Index Template Protocol](index-template.md) [implementation](oci_discovery/ref_engine/oci_index_template) depends on the [uritemplate][] package.
+You can install the dependencies with [pip][]:
+
+```
+$ pip install -r requirements.txt
+```
+
+When uritemplate is not installed, a local implementation is used instead.
+But the local stub supports only the most basic [URI Templates][rfc6570].
+
 ## Using the Python 3 ref-engine discovery tool
 
 The individual components are usable as libraries, but the ref-engine discovery implementation can also be used from the command line:
@@ -258,5 +270,8 @@ location ~ ^/oci-image/.*/index.json$ {
 [layout]: https://github.com/opencontainers/image-spec/blob/v1.0.0/image-layout.md
 [location]: http://nginx.org/en/docs/http/ngx_http_core_module.html#location
 [Nginx]: https://nginx.org/
+[pip]: https://pip.pypa.io/en/stable/
 [python3]: https://docs.python.org/3/
+[rfc6570]: https://tools.ietf.org/html/rfc6570
 [signed-name-assertions]: https://github.com/opencontainers/image-spec/issues/176
+[uritemplate]: https://pypi.python.org/pypi/uritemplate
