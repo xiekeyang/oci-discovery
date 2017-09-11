@@ -25,7 +25,7 @@ from . import ancestor_hosts as _ancestor_hosts
 _LOGGER = _logging.getLogger(__name__)
 
 
-def resolve(name, protocols=('https', 'http')):
+def resolve(name, protocols=('https', 'http'), port=None):
     """Resolve an image name to a Merkle root.
 
     Implementing ref-engine-discovery.md
@@ -33,6 +33,8 @@ def resolve(name, protocols=('https', 'http')):
     name_parts = _host_based_image_names.parse(name=name)
     for protocol in protocols:
         for host in _ancestor_hosts.ancestor_hosts(host=name_parts['host']):
+            if port:
+                host = '{}:{}'.format(host, port)
             uri = '{}://{}/.well-known/oci-host-ref-engines'.format(
                 protocol, host)
             _LOGGER.debug('discovering ref engines via {}'.format(uri))

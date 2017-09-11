@@ -44,6 +44,15 @@ parser.add_argument(
         'specified (looping through all possible hosts for the first '
         'protocol, and then through all possible hosts for the second '
         'protocol, etc.).  Defaults to https,http.'))
+parser.add_argument(
+    '--port',
+    type=int,
+    help=(
+        'Port to use for ref-engine discovery.  For example, this supports '
+        'connecting to test ref-engine discovery services which are not '
+        "running on their protocol's usual port.  This option should be "
+        'combined with a single --protocol option to avoid trying multiple '
+        'protocols against the same port.'))
 
 args = parser.parse_args()
 
@@ -57,7 +66,8 @@ if args.protocol is None:
 resolved = {}
 for name in args.names:
     try:
-        resolved[name] = resolve(name=name, protocols=args.protocol)
+        resolved[name] = resolve(
+            name=name, protocols=args.protocol, port=args.port)
     except ValueError as error:
         log.error(error)
 json.dump(
