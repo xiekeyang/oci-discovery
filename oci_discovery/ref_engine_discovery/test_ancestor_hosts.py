@@ -45,6 +45,7 @@ class TestIPv4Detection(unittest.TestCase):
 class TestAncestorHosts(unittest.TestCase):
     def test_good(self):
         for host, expected in [
+                    ('localhost', ['localhost']),
                     ('example.com', ['example.com']),
                     ('a.example.com', ['a.example.com', 'example.com']),
                     ('a.b.example.com', [

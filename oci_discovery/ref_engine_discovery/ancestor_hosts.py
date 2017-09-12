@@ -34,5 +34,8 @@ def ancestor_hosts(host):
         yield host
         return  # no ancestor domains for IPv4 addresses
     segments = host.split('.')
+    if '.' not in host:
+        yield host
+        return
     for i in range(len(segments) - 1):
         yield '.'.join(segments[i:])
