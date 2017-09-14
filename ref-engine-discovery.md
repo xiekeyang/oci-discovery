@@ -70,8 +70,8 @@ Consumers SHOULD ignore entries which declare unsupported `protocol` values.
 The order of entries in the array is not significant.
 
 The ref-engine discovery service MAY also include `casEngines` entry if it wants to supplement suggestions made by the ref engines.
-If set, the `refEngines` entry MUST be an [array][rfc7159-s5].
-Each entry in the `refEngines` array MUST be an [objects][rfc7159-s4] with at least a `protocol` entry specifying the [cas-engine protocol](cas-engine-protocols.md).
+If set, the `casEngines` entry MUST be an [array][rfc7159-s5].
+Each entry in the `casEngines` array MUST be an [objects][rfc7159-s4] with at least a `protocol` entry specifying the [CAS-engine protocol](cas-engine-protocols.md).
 Consumers SHOULD ignore entries which declare unsupported `protocol` values.
 The order of entries in the array is not significant.
 
