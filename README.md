@@ -1,10 +1,10 @@
 # OCI Image Discovery Specifications
 
-This repository contains the [OCI Ref-engine Discovery specification](ref-engine-discovery.md) and related specifications as an extention to the [image specification][image-spec]:
+This repository contains the [OCI Ref-Engine Discovery specification](ref-engine-discovery.md) and related specifications as an extention to the [image specification][image-spec]:
 
 * [Host-Based Image Names](host-based-image-names.md)
     There is a [Python 3][python3] implementation in [`oci_discovery.host_based_image_names`](oci_discovery/host_based_image_names).
-* [OCI Ref-engine Discovery](ref-engine-discovery.md).
+* [OCI Ref-Engine Discovery](ref-engine-discovery.md).
     There is a Python 3 implementation in [`oci_discovery.ref_engine_discovery`](oci_discovery/ref_engine_discovery).
 * [OCI Index Template Protocol](index-template.md)
     There is a Python 3 implementation in [`oci_discovery.ref_engine.oci_index_template`](oci_discovery/ref_engine/oci_index_template).

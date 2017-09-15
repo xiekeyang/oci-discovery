@@ -1,4 +1,4 @@
-# OCI Ref-engine Discovery
+# OCI Ref-Engine Discovery
 
 This is version 0.1 of this specification.
 

@@ -25,7 +25,7 @@ log = logging.getLogger()
 log.setLevel(logging.ERROR)
 
 parser = argparse.ArgumentParser(
-    description='Resolve image names via OCI Ref-engine Discovery.')
+    description='Resolve image names via OCI Ref-Engine Discovery.')
 parser.add_argument(
     'names', metavar='NAME', type=str, nargs='+',
     help='a host-based image name')
