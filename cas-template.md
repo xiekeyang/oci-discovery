@@ -12,6 +12,7 @@ For a given blob digest, consumers MUST provide at least the following variables
 * `encoded`, matching `encoded` in the `digest` rule.
 
 and expand the URI Template as defined in [RFC 6570 section 3][rfc6570-s3].
+If the expanded URI reference is a relative reference, it MUST be resolved following [RFC 3986 section 5][rfc3986-s5].
 
 ## Example
 
@@ -35,5 +36,6 @@ so the expanded URI is:
     https://a.example.com/cas/sha256/e3/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 
 [digest]: https://github.com/opencontainers/image-spec/blob/v1.0.0/descriptor.md#digests
+[rfc3986-s5]: https://tools.ietf.org/html/rfc3986#section-5
 [rfc6570]: https://tools.ietf.org/html/rfc6570
 [rfc6570-s3]: https://tools.ietf.org/html/rfc6570#section-3

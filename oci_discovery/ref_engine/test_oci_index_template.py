@@ -135,3 +135,67 @@ class TestEngine(unittest.TestCase):
                         return_value=response):
                     generator = engine.resolve(name='example.com/a')
                     self.assertRaisesRegex(error, regex, list, generator)
+
+    def test_reference_expansion(self):
+        response = {
+            'manifests': [
+                {
+                    'entry': 'a',
+                    'annotations': {
+                        'org.opencontainers.image.ref.name': '1.0',
+                    },
+                },
+            ],
+        }
+        for uri, base, expected in [
+                    (
+                        'index.json',
+                        'https://example.com/a',
+                        'https://example.com/index.json',
+                    ),
+                    (
+                        'index.json',
+                        'https://example.com/a/',
+                        'https://example.com/a/index.json',
+                    ),
+                    (
+                        'https://{host}/{path}#{fragment}',
+                        'https://a.example.com/b/',
+                        'https://example.com/a#1.0'
+                    ),
+                    (
+                        '//{host}/{path}#{fragment}',
+                        'https://a.example.com/b/',
+                        'https://example.com/a#1.0'
+                    ),
+                    (
+                        '/{path}#{fragment}',
+                        'https://b.example.com/c/',
+                        'https://b.example.com/a#1.0',
+                    ),
+                    (
+                        '{path}#{fragment}',
+                        'https://b.example.com/c/',
+                        'https://b.example.com/c/a#1.0',
+                    ),
+                    (
+                        '#{fragment}',
+                        'https://example.com/a',
+                        'https://example.com/a#1.0',
+                    ),
+                    (
+                        '#{fragment}',
+                        'https://example.com/a/',
+                        'https://example.com/a/#1.0',
+                    ),
+                ]:
+            with self.subTest(label='{} from {}'.format(uri, base)):
+                engine = oci_index_template.Engine(uri=uri, base=base)
+                with unittest.mock.patch(
+                        target='oci_discovery.ref_engine.oci_index_template._fetch_json.fetch',
+                        return_value=response) as mock:
+                    resolved = list(engine.resolve(name='example.com/a#1.0'))
+                    mock.assert_called_with(
+                        uri=expected,
+                        media_type='application/vnd.oci.image.index.v1+json')
+                self.assertEqual(resolved, response['manifests'])

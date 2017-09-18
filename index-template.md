@@ -14,6 +14,7 @@ Consumers MUST provide at least the following variables:
     If `fragment` was not provided in the image name, it defaults to an empty string.
 
 and expand the URI Template as defined in [RFC 6570 section 3][rfc6570-s3].
+If the expanded URI reference is a relative reference, it MUST be resolved following [RFC 3986 section 5][rfc3986-s5].
 
 The server providing the expanded URI MUST support requests for media type [`application/vnd.oci.image.index.v1+json`][index].
 Servers MAY support other media types using HTTP content negotiation, as described in [RFC 7231 section 3.4][rfc7231-s3.4] (which is [also supported over HTTP/2][rfc7540-s8]).
@@ -88,6 +89,7 @@ Deciding whether to look for `1.0` (the `fragment`) or the full `a.b.example.com
 [index]: https://github.com/opencontainers/image-spec/blob/v1.0.0/image-index.md
 [index.json]: https://github.com/opencontainers/image-spec/blob/v1.0.0/image-layout.md#indexjson-file
 [rfc2606-s3]: https://tools.ietf.org/html/rfc2606#section-3
+[rfc3986-s5]: https://tools.ietf.org/html/rfc3986#section-5
 [rfc6570]: https://tools.ietf.org/html/rfc6570
 [rfc6570-s3]: https://tools.ietf.org/html/rfc6570#section-3
 [rfc7231-s3.4]: https://tools.ietf.org/html/rfc7231#section-3.4
