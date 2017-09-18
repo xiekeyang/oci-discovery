@@ -14,6 +14,7 @@
 
 import logging as _logging
 import pprint as _pprint
+import ssl as _ssl
 import urllib.error as _urllib_error
 
 from .. import fetch_json as _fetch_json
@@ -42,7 +43,9 @@ def resolve(name, protocols=('https', 'http'), port=None):
                 ref_engines_object = _fetch_json.fetch(
                     uri=uri,
                     media_type='application/vnd.oci.ref-engines.v1+json')
-            except _urllib_error.URLError as error:
+            except (_ssl.CertificateError,
+                    _ssl.SSLError,
+                    _urllib_error.URLError) as error:
                 _LOGGER.warning('failed to fetch {} ({})'.format(uri, error))
                 continue
             _LOGGER.debug('received ref-engine discovery object:\n{}'.format(
@@ -61,6 +64,11 @@ def resolve(name, protocols=('https', 'http'), port=None):
                     continue
                 try:
                     roots = list(ref_engine.resolve(name=name))
+                except (_ssl.CertificateError, _ssl.SSLError) as error:
+                    _LOGGER.warning(
+                        'failed to resolve {!r} via {} ({})'.format(
+                            name, ref_engine, error))
+                    continue
                 except _urllib_error.HTTPError as error:
                     _LOGGER.warning('failed to fetch {} ({})'.format(
                         error.geturl(), error))
