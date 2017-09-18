@@ -15,10 +15,7 @@
 import re as _re
 
 
-# Based on rules from https://tools.ietf.org/html/rfc3986#appendix-A.
-_DEC_OCTET = '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[05])'
-_IP_V4_REGEXP = _re.compile(
-    '^' + _DEC_OCTET + '(\.' + _DEC_OCTET + '){3}$')
+from .. import host_based_image_names as _host_based_image_names
 
 
 def ancestor_hosts(host):
@@ -29,7 +26,7 @@ def ancestor_hosts(host):
     if host[0] == '[':
         yield host
         return  # no ancestor domains for IP-literals
-    match = _IP_V4_REGEXP.match(host)
+    match = _host_based_image_names.IPv4_ADDRESS.match(host)
     if match is not None:
         yield host
         return  # no ancestor domains for IPv4 addresses
