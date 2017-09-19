@@ -72,7 +72,13 @@ func refEnginesFetching(parsedName map[string]string) (*object.RefEngines, error
 
 	client := &http.Client{Transport: defaultTrans}
 
-	resp, err := client.Get(u.String())
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", `application/vnd.oci.ref-engines.v1+json`)
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +102,13 @@ func ociIndexFetching(u *url.URL) (*v1.Index, error) {
 
 	client := &http.Client{Transport: defaultTrans}
 
-	resp, err := client.Get(u.String())
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", `application/vnd.oci.image.index.v1+json`)
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
