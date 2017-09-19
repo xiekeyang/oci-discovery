@@ -17,31 +17,6 @@ import unittest
 from . import ancestor_hosts
 
 
-class TestIPv4Detection(unittest.TestCase):
-    def test_ipv4(self):
-        for host, expected in [
-                    ('0.0.0.0', True),
-                    ('9.0.0.0', True),
-                    ('10.0.0.0', True),
-                    ('99.0.0.0', True),
-                    ('100.0.0.0', True),
-                    ('199.0.0.0', True),
-                    ('200.0.0.0', True),
-                    ('249.0.0.0', True),
-                    ('250.0.0.0', True),
-                    ('255.0.0.0', True),
-                    ('256.0.0.0', False),
-                    ('260.0.0.0', False),
-                    ('300.0.0.0', False),
-                    ('0.0.0', False),
-                    ('0.0.0.0.0', False),
-                    ('example.com', False),
-                ]:
-            with self.subTest(host=host):
-                match = ancestor_hosts._IP_V4_REGEXP.match(host)
-                self.assertEqual(match is not None, expected)
-
-
 class TestAncestorHosts(unittest.TestCase):
     def test_good(self):
         for host, expected in [
