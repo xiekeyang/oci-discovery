@@ -14,6 +14,7 @@
 
 import logging as _logging
 import pprint as _pprint
+import urllib.parse as _urllib_parse
 
 try:
     import uritemplate as _uritemplate
@@ -34,12 +35,15 @@ class Engine(object):
             self.__class__.__name__,
             self.uri_template)
 
-    def __init__(self, uri):
+    def __init__(self, uri, base=None):
         self.uri_template = _uritemplate.URITemplate(uri=uri)
+        self.base = base
 
     def resolve(self, name):
         name_parts = _host_based_image_names.parse(name=name)
         uri = self.uri_template.expand(**name_parts)
+        if self.base:
+            uri = _urllib_parse.urljoin(base=self.base, url=uri)
         _LOGGER.debug('fetching an OCI index for {} from {}'.format(name, uri))
         index = _fetch_json.fetch(
             uri=uri,
