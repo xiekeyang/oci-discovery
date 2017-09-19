@@ -1,7 +1,6 @@
 package discovery
 
 import (
-	"fmt"
 	"net/url"
 
 	"github.com/jtacoma/uritemplates"
@@ -9,7 +8,7 @@ import (
 )
 
 const (
-	templateRefEngines urlResolver = `{host}/.well-known/oci-host-ref-engines`
+	templateRefEngines urlResolver = `https://{host}/.well-known/oci-host-ref-engines`
 )
 
 type urlResolver string
@@ -35,20 +34,11 @@ func (ur urlResolver) resolve(v map[string]interface{}) (*url.URL, error) {
 	return u, nil
 }
 
-func paramsParser(name string) (map[string]interface{}, error) {
-	var v = make(map[string]interface{})
-
-	parsed := RegHostBasedImage.FindStringSubmatch(name)
-	if len(parsed) != 3 && len(parsed) != 4 {
-		return nil, fmt.Errorf("%s does not match the host-based-image-name pattern", name)
+// FIXME: Can we do this just by casting?
+func StringStringToStringInterface(input map[string]string) (output map[string]interface{}) {
+	output = make(map[string]interface{})
+	for key, value := range input {
+		output[key] = value
 	}
-
-	v["host"] = parsed[1]
-	v["path"] = parsed[2]
-
-	if len(parsed) == 4 {
-		v["fragment"] = parsed[3]
-	}
-
-	return v, nil
+	return output
 }

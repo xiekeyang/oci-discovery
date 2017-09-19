@@ -12,6 +12,7 @@ import (
 	"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"github.com/xiekeyang/oci-discovery/tools/hostbasedimagenames"
 	"github.com/xiekeyang/oci-discovery/tools/object"
 )
 
@@ -27,19 +28,19 @@ func DiscoveryHandler(context *cli.Context) error {
 		roots []v1.Descriptor
 	)
 
-	v, err := paramsParser(name)
+	parsedName, err := hostbasedimagenames.Parse(name)
 	if err != nil {
 		return err
 	}
 
-	engines, err := refEnginesFetching(v)
+	engines, err := refEnginesFetching(parsedName)
 	if err != nil {
 		return err
 	}
 
 	for _, engine := range engines.RefEngines {
 		var ur urlResolver = urlResolver(engine.Uri)
-		u, err := ur.resolve(v)
+		u, err := ur.resolve(StringStringToStringInterface(parsedName))
 		if err != nil {
 			return err
 		}
@@ -49,7 +50,7 @@ func DiscoveryHandler(context *cli.Context) error {
 			return err
 		}
 
-		if fragment, ok := v["fragment"]; ok {
+		if fragment, ok := parsedName["fragment"]; ok && len(fragment) > 0 {
 			for _, manifest := range index.Manifests {
 				if fragment == manifest.Annotations[`org.opencontainers.image.ref.name`] {
 					roots = append(roots, manifest)
@@ -63,8 +64,8 @@ func DiscoveryHandler(context *cli.Context) error {
 	return stdWrite(roots)
 }
 
-func refEnginesFetching(v map[string]interface{}) (*object.RefEngines, error) {
-	u, err := templateRefEngines.resolve(v)
+func refEnginesFetching(parsedName map[string]string) (*object.RefEngines, error) {
+	u, err := templateRefEngines.resolve(StringStringToStringInterface(parsedName))
 	if err != nil {
 		return nil, err
 	}
