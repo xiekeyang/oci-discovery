@@ -44,22 +44,25 @@ $ python3 -m oci_discovery.ref_engine_discovery -l debug example.com/app#1.0 2>/
   "example.com/app#1.0": {
     "roots": [
       {
-        "annotations": {
-          "org.opencontainers.image.ref.name": "1.0"
+        "root": {
+          "annotations": {
+            "org.opencontainers.image.ref.name": "1.0"
+          },
+          "casEngines": [
+            {
+              "protocol": "oci-cas-template-v1",
+              "uri": "https://a.example.com/cas/{algorithm}/{encoded:2}/{encoded}"
+            }
+          ],
+          "digest": "sha256:e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3",
+          "mediaType": "application/vnd.oci.image.manifest.v1+json",
+          "platform": {
+            "architecture": "ppc64le",
+            "os": "linux"
+          },
+          "size": 799
         },
-        "casEngines": [
-          {
-            "protocol": "oci-cas-template-v1",
-            "uri": "https://a.example.com/cas/{algorithm}/{encoded:2}/{encoded}"
-          }
-        ],
-        "digest": "sha256:e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3",
-        "mediaType": "application/vnd.oci.image.manifest.v1+json",
-        "platform": {
-          "architecture": "ppc64le",
-          "os": "linux"
-        },
-        "size": 799
+        "uri": "http://example.com/oci-index/app"
       }
     ]
   }

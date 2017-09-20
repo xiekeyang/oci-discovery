@@ -40,7 +40,7 @@ def resolve(name, protocols=('https', 'http'), port=None):
                 protocol, host)
             _LOGGER.debug('discovering ref engines via {}'.format(uri))
             try:
-                ref_engines_object = _fetch_json.fetch(
+                fetched = _fetch_json.fetch(
                     uri=uri,
                     media_type='application/vnd.oci.ref-engines.v1+json')
             except (_ssl.CertificateError,
@@ -48,6 +48,7 @@ def resolve(name, protocols=('https', 'http'), port=None):
                     _urllib_error.URLError) as error:
                 _LOGGER.warning('failed to fetch {} ({})'.format(uri, error))
                 continue
+            ref_engines_object = fetched['json']
             _LOGGER.debug('received ref-engine discovery object:\n{}'.format(
                 _pprint.pformat(ref_engines_object)))
             if not isinstance(ref_engines_object, dict):
@@ -58,7 +59,7 @@ def resolve(name, protocols=('https', 'http'), port=None):
                 continue
             for ref_engine_object in ref_engines_object.get('refEngines', []):
                 try:
-                    ref_engine = _ref_engine.new(**ref_engine_object)
+                    ref_engine = _ref_engine.new(base=fetched['uri'], **ref_engine_object)
                 except KeyError as error:
                     _LOGGER.warning(error)
                     continue
