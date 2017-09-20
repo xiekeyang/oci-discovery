@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/xiekeyang/oci-discovery/tools/hostbasedimagenames"
 	v1new "github.com/xiekeyang/oci-discovery/tools/newimagespec"
+	"github.com/xiekeyang/oci-discovery/tools/refengine"
 	"golang.org/x/net/context"
 )
 
@@ -115,7 +116,16 @@ func TestHandleIndexGood(t *testing.T) {
 		"uri": "https://example.com/index",
 	}
 
-	engine, err := New(ctx, nil, config)
+	uri, err := url.Parse(config["uri"])
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	request := &http.Request{
+		URL: uri,
+	}
+
+	engine, err := New(ctx, uri, config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -228,15 +238,23 @@ func TestHandleIndexGood(t *testing.T) {
 			}
 
 			response := &http.Response{
-				Body: ioutil.NopCloser(bytes.NewReader(bodyBytes)),
+				Request: request,
+				Body:    ioutil.NopCloser(bytes.NewReader(bodyBytes)),
 			}
 
-			descriptors, err := engine.(*Engine).handleIndex(response, parsedName)
+			roots, err := engine.(*Engine).handleIndex(response, parsedName)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, testcase.expected, descriptors)
+			expected := make([]refengine.MerkleRoot, len(testcase.expected))
+			for i, descriptor := range testcase.expected {
+				expected[i].MediaType = `application/vnd.oci.descriptor.v1+json`
+				expected[i].Root = descriptor
+				expected[i].URI = uri
+			}
+
+			assert.Equal(t, expected, roots)
 		})
 	}
 }
@@ -297,9 +315,9 @@ func TestHandleIndexBad(t *testing.T) {
 				Body:    ioutil.NopCloser(strings.NewReader(testcase.response)),
 			}
 
-			descriptors, err := engine.(*Engine).handleIndex(response, parsedName)
+			roots, err := engine.(*Engine).handleIndex(response, parsedName)
 			if err == nil {
-				t.Fatalf("returned %v and did not raise the expected error", descriptors)
+				t.Fatalf("returned %v and did not raise the expected error", roots)
 			}
 
 			assert.Regexp(t, testcase.expected, err.Error())

@@ -12,44 +12,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package engine
+package refengine
 
 import (
 	"encoding/json"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConfigGood(t *testing.T) {
+func TestMerkleRootGood(t *testing.T) {
 	for _, testcase := range []struct {
 		JSON     string
-		Expected Config
+		Expected MerkleRoot
 	}{
 		{
-			JSON: `{"protocol":"oci-image-template-v1","uri":"index.json"}`,
-			Expected: Config{
-				Protocol: "oci-image-template-v1",
-				Data: map[string]interface{}{
-					"uri": "index.json",
+			JSON: `{"root":"a"}`,
+			Expected: MerkleRoot{
+				Root: "a",
+			},
+		},
+		{
+			JSON: `{"mediaType":"text/plain"}`,
+			Expected: MerkleRoot{
+				MediaType: "text/plain",
+			},
+		},
+		{
+			JSON: `{"root":"a","uri":"https://example.com"}`,
+			Expected: MerkleRoot{
+				MediaType: "",
+				Root:      "a",
+				URI: &url.URL{
+					Scheme: "https",
+					Host:   "example.com",
 				},
 			},
 		},
 		{
-			JSON: `{"protocol":"nested-array","x-array":[1.2,3.4]}`,
-			Expected: Config{
-				Protocol: "nested-array",
-				Data: map[string]interface{}{
-					"x-array": []interface{}{1.2, 3.4},
+			JSON: `{"root":[1.2,3.4],"uri":"https://example.com"}`,
+			Expected: MerkleRoot{
+				Root: []interface{}{1.2, 3.4},
+				URI: &url.URL{
+					Scheme: "https",
+					Host:   "example.com",
 				},
 			},
 		},
 	} {
 		t.Run(testcase.JSON, func(t *testing.T) {
-			var config Config
-			json.Unmarshal([]byte(testcase.JSON), &config)
-			assert.Equal(t, testcase.Expected, config)
-			marshaled, err := json.Marshal(config)
+			var root MerkleRoot
+			json.Unmarshal([]byte(testcase.JSON), &root)
+			assert.Equal(t, testcase.Expected, root)
+			marshaled, err := json.Marshal(root)
 			if err != nil {
 				t.Fatal(err)
 			}

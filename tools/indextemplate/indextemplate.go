@@ -72,7 +72,7 @@ func New(ctx context.Context, baseURI *url.URL, config interface{}) (engine refe
 }
 
 // Get returns an array of matching references from the store.
-func (engine *Engine) Get(ctx context.Context, name string) (descriptors []v1.Descriptor, err error) {
+func (engine *Engine) Get(ctx context.Context, name string) (roots []refengine.MerkleRoot, err error) {
 	parsedName, err := hostbasedimagenames.Parse(name)
 	if err != nil {
 		return nil, err
@@ -106,11 +106,11 @@ func (engine *Engine) Get(ctx context.Context, name string) (descriptors []v1.De
 		return nil, err
 	}
 
-	if mediatype != `application/vnd.oci.image.index.v1+json` {
-		return nil, fmt.Errorf("Unknown Content-Type: %s", mediatype)
+	if mediatype != request.Header.Get(`Accept`) {
+		return nil, fmt.Errorf("requested %s from %s but got %s", request.Header.Get(`Accept`), request.URL, mediatype)
 	}
 
-	return engine.handleIndex(response, parsedName)
+	return engine.handleIndex(mediatype, response, parsedName)
 }
 
 // Close releases resources held by the engine.
@@ -133,28 +133,29 @@ func (engine *Engine) resolveURI(parsedName map[string]string) (uri *url.URL, er
 	return uri, nil
 }
 
-func (engine *Engine) handleIndex(response *http.Response, parsedName map[string]string) (descriptors []v1.Descriptor, err error) {
-	descriptors = make([]v1.Descriptor, 0)
+func (engine *Engine) handleIndex(mediatype string, response *http.Response, parsedName map[string]string) (roots []refengine.MerkleRoot, err error) {
+	roots = []refengine.MerkleRoot{}
 	var index v1.Index
 
 	// FIXME: check response content type (and charset?)
 
 	if err := json.NewDecoder(response.Body).Decode(&index); err != nil {
-		logrus.Errorf("%s claimed to return application/vnd.oci.image.index.v1+json, but the response schema did not match: %s", response.Request.URL, err)
-		return descriptors, err
+		logrus.Errorf("%s claimed to return %s, but the response schema did not match: %s", response.Request.URL, mediatype, err)
+		return roots, err
 	}
 
-	if fragment, ok := parsedName["fragment"]; ok && len(fragment) > 0 {
-		for _, descriptor := range index.Manifests {
-			if fragment == descriptor.Annotations[`org.opencontainers.image.ref.name`] {
-				descriptors = append(descriptors, descriptor)
-			}
+	for _, descriptor := range index.Manifests {
+		fragment, ok := parsedName["fragment"]
+		if !ok || fragment == "" || fragment == descriptor.Annotations[`org.opencontainers.image.ref.name`] {
+			roots = append(roots, refengine.MerkleRoot{
+				MediaType: `application/vnd.oci.descriptor.v1+json`,
+				Root:      descriptor,
+				URI:       response.Request.URL, // FIXME: get URI after any redirects
+			})
 		}
-	} else {
-		descriptors = append(descriptors, index.Manifests...)
 	}
 
-	return descriptors, nil
+	return roots, nil
 }
 
 func init() {
