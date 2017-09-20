@@ -17,16 +17,14 @@ package refengine
 import (
 	"net/url"
 
-	//"github.com/opencontainers/image-spec/specs-go/v1"
-	v1 "github.com/xiekeyang/oci-discovery/tools/newimagespec"
 	"golang.org/x/net/context"
 )
 
 // Engine represents a reference engine.
 type Engine interface {
 
-	// Get returns an array of matching references from the store.
-	Get(ctx context.Context, name string) (descriptors []v1.Descriptor, err error)
+	// Get returns an array of potential Merkle roots from the store.
+	Get(ctx context.Context, name string) (roots []MerkleRoot, err error)
 
 	// Close releases resources held by the engine.  Subsequent engine
 	// method calls will fail.
