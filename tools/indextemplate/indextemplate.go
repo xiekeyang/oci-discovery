@@ -17,11 +17,11 @@ package indextemplate
 import (
 	"encoding/json"
 	"fmt"
+	"mime"
 	"net/http"
 	"net/url"
 
 	"github.com/jtacoma/uritemplates"
-	//"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/sirupsen/logrus"
 	"github.com/xiekeyang/oci-discovery/tools/hostbasedimagenames"
 	v1 "github.com/xiekeyang/oci-discovery/tools/newimagespec"
@@ -100,6 +100,15 @@ func (engine *Engine) Get(ctx context.Context, name string) (descriptors []v1.De
 		return nil, err
 	}
 	defer response.Body.Close()
+
+	mediatype, _, err := mime.ParseMediaType(response.Header.Get(`Content-Type`))
+	if err != nil {
+		return nil, err
+	}
+
+	if mediatype != `application/vnd.oci.image.index.v1+json` {
+		return nil, fmt.Errorf("Unknown Content-Type: %s", mediatype)
+	}
 
 	return engine.handleIndex(response, parsedName)
 }

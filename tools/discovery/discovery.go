@@ -5,11 +5,11 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"mime"
 	"net/http"
 	"net/url"
 	"os"
 
-	//"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/xiekeyang/oci-discovery/tools/engine"
@@ -87,6 +87,15 @@ func refEnginesFetching(parsedName map[string]string) (uri *url.URL, engines []e
 
 	if resp.StatusCode >= 400 {
 		return uri, nil, fmt.Errorf("ref engine fetching error, status code = %d", resp.StatusCode)
+	}
+
+	mediatype, _, err := mime.ParseMediaType(resp.Header.Get(`Content-Type`))
+	if err != nil {
+		return uri, nil, err
+	}
+
+	if mediatype != `application/vnd.oci.ref-engines.v1+json` {
+		return uri, nil, fmt.Errorf("Unknown Content-Type: %s", mediatype)
 	}
 
 	var refEngines RefEngines
