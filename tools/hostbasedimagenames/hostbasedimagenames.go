@@ -40,8 +40,8 @@ var (
 )
 
 // Parse takes a host-based image name and returns a map[string]string
-// with host, path, and fragment keys, and values extracted from the
-// image name.
+// with name, host, path, and fragment keys, and values extracted from
+// the image name.
 func Parse(name string) (matches map[string]string, err error) {
 	matches = make(map[string]string)
 
@@ -60,6 +60,8 @@ func Parse(name string) (matches map[string]string, err error) {
 	if !ok {
 		matches["fragment"] = ""
 	}
+
+	matches["name"] = name
 
 	return matches, nil
 }

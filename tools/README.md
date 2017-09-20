@@ -3,7 +3,7 @@
 ## Eaxmple:
 
 ```
-$ go run tools/cmd/main.go --debug discovery example.com/app#1.0
+$ go run cmd/main.go --debug discovery example.com/app#1.0 2>/tmp/log
 [
 	{
 		"mediaType": "application/vnd.oci.image.manifest.v1+json",
@@ -18,4 +18,7 @@ $ go run tools/cmd/main.go --debug discovery example.com/app#1.0
 		}
 	}
 ]
+$ cat /tmp/log
+time="2017-09-19T12:43:41-07:00" level=debug msg="requesting application/vnd.oci.ref-engines.v1+json from http://example.com/.well-known/oci-host-ref-engines"
+time="2017-09-19T12:43:41-07:00" level=debug msg="requesting application/vnd.oci.image.index.v1+json from https://example.com/oci-index/app"
 ```

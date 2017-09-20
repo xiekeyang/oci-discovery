@@ -12,8 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-test:
+test: test-go test-python
+
+test-debug: test-go-debug test-python-debug
+
+test-go:
+	go test ./tools/...
+
+test-go-debug:
+	go test -v ./tools/...
+
+test-python:
 	python3 -m unittest discover
 
-test-debug:
+test-python-debug:
 	DEBUG=1 python3 -m unittest discover -v

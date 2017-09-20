@@ -14,6 +14,7 @@ func TestParseGood(t *testing.T) {
 		{
 			Name: "example.com/a",
 			Expected: map[string]string{
+				"name":     "example.com/a",
 				"host":     "example.com",
 				"path":     "a",
 				"fragment": "",
@@ -22,6 +23,7 @@ func TestParseGood(t *testing.T) {
 		{
 			Name: "example.com/a/",
 			Expected: map[string]string{
+				"name":     "example.com/a/",
 				"host":     "example.com",
 				"path":     "a/",
 				"fragment": "",
@@ -30,6 +32,7 @@ func TestParseGood(t *testing.T) {
 		{
 			Name: "example.com/a/b",
 			Expected: map[string]string{
+				"name":     "example.com/a/b",
 				"host":     "example.com",
 				"path":     "a/b",
 				"fragment": "",
@@ -38,6 +41,7 @@ func TestParseGood(t *testing.T) {
 		{
 			Name: "example.com/a/b#c",
 			Expected: map[string]string{
+				"name":     "example.com/a/b#c",
 				"host":     "example.com",
 				"path":     "a/b",
 				"fragment": "c",
@@ -46,6 +50,7 @@ func TestParseGood(t *testing.T) {
 		{
 			Name: "localhost/a",
 			Expected: map[string]string{
+				"name":     "localhost/a",
 				"host":     "localhost",
 				"path":     "a",
 				"fragment": "",
@@ -54,6 +59,7 @@ func TestParseGood(t *testing.T) {
 		{
 			Name: "127.0.0.1/a",
 			Expected: map[string]string{
+				"name":     "127.0.0.1/a",
 				"host":     "127.0.0.1",
 				"path":     "a",
 				"fragment": "",
@@ -62,6 +68,7 @@ func TestParseGood(t *testing.T) {
 		{
 			Name: "[::1]/a",
 			Expected: map[string]string{
+				"name":     "[::1]/a",
 				"host":     "[::1]",
 				"path":     "a",
 				"fragment": "",

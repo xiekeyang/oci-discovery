@@ -9,11 +9,15 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/opencontainers/image-spec/specs-go/v1"
+	//"github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"github.com/xiekeyang/oci-discovery/tools/engine"
 	"github.com/xiekeyang/oci-discovery/tools/hostbasedimagenames"
-	"github.com/xiekeyang/oci-discovery/tools/object"
+	v1 "github.com/xiekeyang/oci-discovery/tools/newimagespec"
+	"github.com/xiekeyang/oci-discovery/tools/refengine"
+	"github.com/xiekeyang/oci-discovery/tools/util"
+	"golang.org/x/net/context"
 )
 
 var (
@@ -22,10 +26,16 @@ var (
 	}
 )
 
-func DiscoveryHandler(context *cli.Context) error {
+type RefEngines struct {
+	RefEngines []engine.Config `json:"refEngines,omitempty"`
+	CASEngines []engine.Config `json:"casEngines,omitempty"`
+}
+
+func DiscoveryHandler(cliContext *cli.Context) error {
 	var (
-		name  = context.Args()[0]
-		roots []v1.Descriptor
+		ctx   = context.Background()
+		name  = cliContext.Args()[0]
+		roots = []v1.Descriptor{}
 	)
 
 	parsedName, err := hostbasedimagenames.Parse(name)
@@ -33,81 +43,59 @@ func DiscoveryHandler(context *cli.Context) error {
 		return err
 	}
 
-	engines, err := refEnginesFetching(parsedName)
+	uri, engines, err := refEnginesFetching(parsedName)
 	if err != nil {
 		return err
 	}
 
-	for _, engine := range engines.RefEngines {
-		var ur urlResolver = urlResolver(engine.Uri)
-		u, err := ur.resolve(StringStringToStringInterface(parsedName))
+	for _, config := range engines {
+		constructor, ok := refengine.Constructors[config.Protocol]
+		if !ok {
+			logrus.Debugf("unsupported ref-engine protocol %q (%v)", config.Protocol, refengine.Constructors)
+			continue
+		}
+		engine, err := constructor(ctx, uri, config.Data)
 		if err != nil {
-			return err
+			logrus.Warnf("failed to initialize %s ref-engine with %v: %s", config.Protocol, config.Data, err)
+			continue
 		}
-
-		index, err := ociIndexFetching(u)
+		roots, err = engine.Get(ctx, name)
 		if err != nil {
-			return err
+			logrus.Warnf("failed to resolve %q with %s ref-engine (%v): %s", name, config.Protocol, config.Data, err)
+			continue
 		}
-
-		if fragment, ok := parsedName["fragment"]; ok && len(fragment) > 0 {
-			for _, manifest := range index.Manifests {
-				if fragment == manifest.Annotations[`org.opencontainers.image.ref.name`] {
-					roots = append(roots, manifest)
-				}
-			}
-		} else {
-			roots = append(roots, index.Manifests...)
-		}
+		return stdWrite(roots)
 	}
 
 	return stdWrite(roots)
 }
 
-func refEnginesFetching(parsedName map[string]string) (*object.RefEngines, error) {
-	u, err := templateRefEngines.resolve(StringStringToStringInterface(parsedName))
+func refEnginesFetching(parsedName map[string]string) (uri *url.URL, engines []engine.Config, err error) {
+	uri, err = templateRefEngines.resolve(util.StringStringToStringInterface(parsedName))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	client := &http.Client{Transport: defaultTrans}
 
-	resp, err := client.Get(u.String())
+	logrus.Debugf("requesting application/vnd.oci.ref-engines.v1+json from %s", uri)
+	resp, err := client.Get(uri.String())
 	if err != nil {
-		return nil, err
+		return uri, nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("ref engine fetching error, status code = %d", resp.StatusCode)
+		return uri, nil, fmt.Errorf("ref engine fetching error, status code = %d", resp.StatusCode)
 	}
 
-	var engines object.RefEngines
-	if err := json.NewDecoder(resp.Body).Decode(&engines); err != nil {
+	var refEngines RefEngines
+	if err := json.NewDecoder(resp.Body).Decode(&refEngines); err != nil {
 		logrus.Errorf("ref engines object decoded failed: %s", err)
-		return nil, err
+		return uri, nil, err
 	}
 
-	return &engines, nil
-}
-
-func ociIndexFetching(u *url.URL) (*v1.Index, error) {
-	var index *v1.Index
-
-	client := &http.Client{Transport: defaultTrans}
-
-	resp, err := client.Get(u.String())
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if err := json.NewDecoder(resp.Body).Decode(&index); err != nil {
-		logrus.Errorf("index decoded failed: %s", err)
-		return nil, err
-	}
-
-	return index, nil
+	return uri, refEngines.RefEngines, nil
 }
 
 func stdWrite(v interface{}) error {

@@ -33,12 +33,3 @@ func (ur urlResolver) resolve(v map[string]interface{}) (*url.URL, error) {
 
 	return u, nil
 }
-
-// FIXME: Can we do this just by casting?
-func StringStringToStringInterface(input map[string]string) (output map[string]interface{}) {
-	output = make(map[string]interface{})
-	for key, value := range input {
-		output[key] = value
-	}
-	return output
-}

@@ -6,6 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/xiekeyang/oci-discovery/tools/discovery"
+
+	_ "github.com/xiekeyang/oci-discovery/tools/indextemplate"
 )
 
 var discoveryCommand = cli.Command{
