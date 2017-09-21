@@ -19,7 +19,7 @@ try:
     import uritemplate
 except ImportError:
     uritemplate = None
-    
+
 
 from . import URITemplate
 
@@ -27,7 +27,7 @@ from . import URITemplate
 class TestURITemplate(unittest.TestCase):
     def _run(self, cls, exceptions=(), wrong_values=()):
         """Test against examples from RFC 6570.
-    
+
         https://tools.ietf.org/html/rfc6570
         """
         # Defined in https://tools.ietf.org/html/rfc6570#section-3.2
@@ -187,7 +187,7 @@ class TestURITemplate(unittest.TestCase):
                             self.assertNotEqual(expanded, expected)
                         else:
                             self.assertEqual(expanded, expected)
-                            
+
     def test_stub(self):
         self._run(
             cls=URITemplate,
