@@ -104,7 +104,7 @@ func TestResolveURI(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, uri.String(), testcase.expected)
+			assert.Equal(t, testcase.expected, uri.String())
 		})
 	}
 }
@@ -236,7 +236,7 @@ func TestHandleIndexGood(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, descriptors, testcase.expected)
+			assert.Equal(t, testcase.expected, descriptors)
 		})
 	}
 }
@@ -302,7 +302,7 @@ func TestHandleIndexBad(t *testing.T) {
 				t.Fatalf("returned %v and did not raise the expected error", descriptors)
 			}
 
-			assert.Equal(t, err.Error(), testcase.expected)
+			assert.Equal(t, testcase.expected, err.Error())
 		})
 	}
 }
