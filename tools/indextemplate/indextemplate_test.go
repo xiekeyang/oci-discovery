@@ -278,17 +278,17 @@ func TestHandleIndexBad(t *testing.T) {
 		{
 			label:    "manifests is not a JSON array",
 			response: `{"manifests": {}}`,
-			expected: "json: cannot unmarshal object into Go value of type []v1.Descriptor",
+			expected: `json: cannot unmarshal object into Go .* of type \[\]v1.Descriptor`,
 		},
 		{
 			label:    "manifests contains a non-object",
 			response: `{"manifests": [1]}`,
-			expected: "json: cannot unmarshal number into Go value of type v1.Descriptor",
+			expected: `json: cannot unmarshal number into Go .* of type v1.Descriptor`,
 		},
 		{
 			label:    "at least one manifests[].annotations is not a JSON object",
 			response: `{"manifests": [{"annotations": 1}]}`,
-			expected: "json: cannot unmarshal number into Go value of type map[string]string",
+			expected: `json: cannot unmarshal number into Go .* of type map\[string\]string`,
 		},
 	} {
 		t.Run(testcase.label, func(t *testing.T) {
@@ -302,7 +302,7 @@ func TestHandleIndexBad(t *testing.T) {
 				t.Fatalf("returned %v and did not raise the expected error", descriptors)
 			}
 
-			assert.Equal(t, testcase.expected, err.Error())
+			assert.Regexp(t, testcase.expected, err.Error())
 		})
 	}
 }
