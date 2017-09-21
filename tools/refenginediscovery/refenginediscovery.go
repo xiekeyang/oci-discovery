@@ -37,14 +37,14 @@ func Discover(ctx context.Context, protocols []string, host string, refEngineCal
 		protocols = []string{"https", "http"}
 	}
 
-	uri, err := url.Parse("https://example.com/.well-known/oci-host-ref-engines")
+	uri, err := url.Parse("https://" + host + "/.well-known/oci-host-ref-engines")
 	if err != nil {
 		return err
 	}
 	for _, protocol := range protocols {
 		uri.Scheme = protocol
 		// FIXME: walk DNS ancestors
-		uri.Host = host
+
 		base, err := fetch(ctx, uri)
 		if err != nil {
 			logrus.Warn(err)
@@ -78,7 +78,7 @@ func fetch(ctx context.Context, uri *url.URL) (base *Base, err error) {
 		return nil, err
 	}
 	defer response.Body.Close()
-	base.URI = uri  // FIXME: get URI after any redirects
+	base.URI = uri // FIXME: get URI after any redirects
 
 	if response.StatusCode >= 400 {
 		return nil, fmt.Errorf("ref engine fetching error, status code = %d", response.StatusCode)
