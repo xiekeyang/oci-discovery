@@ -26,8 +26,9 @@ class Engine(object):
             self.__class__.__name__,
             self._response)
 
-    def __init__(self, response):
+    def __init__(self, response, base=None):
         self._response = response
+        self.base = base
 
     def resolve(self, name):
         return _copy.deepcopy(self._response)

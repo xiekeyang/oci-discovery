@@ -94,14 +94,24 @@ class TestEngine(unittest.TestCase):
                     ),
                 ]:
             engine = oci_index_template.Engine(uri='https://example.com/index')
+            responseURI = 'https://x.example.com/y'
             with self.subTest(label=label):
                 with unittest.mock.patch(
                         target='oci_discovery.ref_engine.oci_index_template._fetch_json.fetch',
-                        return_value=response):
+                        return_value={
+                            'uri': responseURI,
+                            'json': response,
+                        }):
                     resolved = list(engine.resolve(name=name))
-                self.assertEqual(resolved, expected)
+                self.assertEqual(
+                    resolved,
+                    [
+                        {'uri': responseURI, 'root': root}
+                        for root in expected
+                    ])
 
     def test_bad(self):
+        uri = 'https://example.com/index'
         for label, response, error, regex in [
                     (
                         'index is not a JSON object',
@@ -128,11 +138,14 @@ class TestEngine(unittest.TestCase):
                         "https://example.com/index claimed to return application/vnd.oci.image.index.v1\+json, but actually returned \{'manifests': \[\{'annotations': None}]}",
                     ),
                 ]:
-            engine = oci_index_template.Engine(uri='https://example.com/index')
+            engine = oci_index_template.Engine(uri=uri)
             with self.subTest(label=label):
                 with unittest.mock.patch(
                         target='oci_discovery.ref_engine.oci_index_template._fetch_json.fetch',
-                        return_value=response):
+                        return_value={
+                            'uri': uri,
+                            'json': response,
+                        }):
                     generator = engine.resolve(name='example.com/a')
                     self.assertRaisesRegex(error, regex, list, generator)
 
@@ -193,9 +206,14 @@ class TestEngine(unittest.TestCase):
                 engine = oci_index_template.Engine(uri=uri, base=base)
                 with unittest.mock.patch(
                         target='oci_discovery.ref_engine.oci_index_template._fetch_json.fetch',
-                        return_value=response) as mock:
+                        return_value={
+                            'uri': expected,
+                            'json': response
+                        }) as mock:
                     resolved = list(engine.resolve(name='example.com/a#1.0'))
                     mock.assert_called_with(
                         uri=expected,
                         media_type='application/vnd.oci.image.index.v1+json')
-                self.assertEqual(resolved, response['manifests'])
+                self.assertEqual(
+                    resolved,
+                    [{'uri': expected, 'root': root} for root in response['manifests']])

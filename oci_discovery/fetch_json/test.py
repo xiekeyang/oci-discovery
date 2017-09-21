@@ -19,13 +19,34 @@ import unittest.mock
 from . import fetch
 
 
+class ContextManager(object):
+    def __init__(self, target, return_value):
+        self._target = target
+        self._return_value = return_value
+
+    def __enter__(self):
+        context = unittest.mock.MagicMock()
+        context.__enter__ = lambda a: self._return_value
+        context.__exit__ = lambda a, b, c, d: None
+        self._patch = unittest.mock.patch(
+            target=self._target, return_value=context)
+        return self._patch.__enter__()
+
+    def __exit__(self, *args, **kwargs):
+        self._patch.__exit__(*args, **kwargs)
+
+
 class HTTPResponse(object):
-    def __init__(self, code=200, body=None, headers=None):
+    def __init__(self, url, code=200, body=None, headers=None):
+        self._url = url
         self.code = code
         self._body = body
         self.headers = email.message.Message()
         for key, value in headers.items():
             self.headers[key] = value
+
+    def geturl(self):
+        return self._url
 
     def read(self):
         return self._body or ''
@@ -33,10 +54,12 @@ class HTTPResponse(object):
 
 class TestFetchJSON(unittest.TestCase):
     def test_good(self):
+        uri = 'https://example.com'
         for name, response, expected in [
                     (
                         'empty object',
                         HTTPResponse(
+                            url=uri,
                             body=b'{}',
                             headers={
                                 'Content-Type': 'application/json; charset=UTF-8',
@@ -47,6 +70,7 @@ class TestFetchJSON(unittest.TestCase):
                     (
                         'basic object',
                         HTTPResponse(
+                            url=uri,
                             body=b'{"a": "b", "c": 1}',
                             headers={
                                 'Content-Type': 'application/json; charset=UTF-8',
@@ -56,18 +80,19 @@ class TestFetchJSON(unittest.TestCase):
                     ),
                 ]:
             with self.subTest(name=name):
-                with unittest.mock.patch(
-                            target='oci_discovery.fetch_json._urllib_request.urlopen',
-                            return_value=response
-                        ) as patch_context:
-                    json = fetch(uri='https://example.com')
-                self.assertEqual(json, expected)
+                with ContextManager(
+                        target='oci_discovery.fetch_json._urllib_request.urlopen',
+                        return_value=response):
+                    fetched = fetch(uri=uri)
+                self.assertEqual(fetched, {'uri': uri, 'json': expected})
 
     def test_bad(self):
+        uri = 'https://example.com'
         for name, response, error, regex in [
                     (
                         'no charset',
                         HTTPResponse(
+                            url=uri,
                             body=b'{}',
                             headers={
                                 'Content-Type': 'application/json',
@@ -79,6 +104,7 @@ class TestFetchJSON(unittest.TestCase):
                     (
                         'declared charset does not match body',
                         HTTPResponse(
+                            url=uri,
                             body=b'\xff',
                             headers={
                                 'Content-Type': 'application/json; charset=UTF-8',
@@ -90,6 +116,7 @@ class TestFetchJSON(unittest.TestCase):
                     (
                         'invalid JSON',
                         HTTPResponse(
+                            url=uri,
                             body=b'{',
                             headers={
                                 'Content-Type': 'application/json; charset=UTF-8',
@@ -101,6 +128,7 @@ class TestFetchJSON(unittest.TestCase):
                     (
                         'unexpected media type',
                         HTTPResponse(
+                            url=uri,
                             body=b'{}',
                             headers={
                                 'Content-Type': 'text/plain; charset=UTF-8',
@@ -111,7 +139,7 @@ class TestFetchJSON(unittest.TestCase):
                     ),
                 ]:
             with self.subTest(name=name):
-                with unittest.mock.patch(
+                with ContextManager(
                         target='oci_discovery.fetch_json._urllib_request.urlopen',
                         return_value=response):
                     self.assertRaisesRegex(

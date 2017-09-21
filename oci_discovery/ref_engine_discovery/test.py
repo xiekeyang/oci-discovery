@@ -36,26 +36,48 @@ class TestResolve(unittest.TestCase):
                                 {
                                     'protocol': '_dummy',
                                     'response': [
-                                        {'name': 'dummy Merkle root 1'},
-                                        {'name': 'dummy Merkle root 2'},
+                                        {
+                                            'uri': 'https://x.example.com/y',
+                                            'root': {'name': 'dummy Merkle root 1'},
+                                        },
+                                        {
+                                            'uri': 'https://x.example.com/z',
+                                            'root': {'name': 'dummy Merkle root 2'},
+                                        },
                                     ],
                                 }
                             ]
                         },
                         {
                             'roots': [
-                                {'name': 'dummy Merkle root 1'},
-                                {'name': 'dummy Merkle root 2'},
+                                {
+                                    'uri': 'https://x.example.com/y',
+                                    'root': {'name': 'dummy Merkle root 1'},
+                                },
+                                {
+                                    'uri': 'https://x.example.com/z',
+                                    'root': {'name': 'dummy Merkle root 2'},
+                                },
                             ],
                         }
                     ),
                 ]:
+            responseURI = 'https://x.example.com/y'
             with self.subTest(label=label):
                 with unittest.mock.patch(
                         target='oci_discovery.ref_engine_discovery._fetch_json.fetch',
-                        return_value=response):
+                        return_value={
+                            'uri': responseURI,
+                            'json': response,
+                        }):
                     resolved = resolve(name=name)
-                self.assertEqual(resolved, expected)
+                self.assertEqual(
+                    resolved,
+                    [
+                        {'uri': responseURI, 'root': root}
+                        for root in expected
+                    ])
+
 
     def test_bad(self):
         for label, name, response, error, regex in [

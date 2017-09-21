@@ -45,9 +45,10 @@ class Engine(object):
         if self.base:
             uri = _urllib_parse.urljoin(base=self.base, url=uri)
         _LOGGER.debug('fetching an OCI index for {} from {}'.format(name, uri))
-        index = _fetch_json.fetch(
+        fetched = _fetch_json.fetch(
             uri=uri,
             media_type='application/vnd.oci.image.index.v1+json')
+        index = fetched['json']
         _LOGGER.debug('received OCI index object:\n{}'.format(
             _pprint.pformat(index)))
         if not isinstance(index, dict):
@@ -72,4 +73,7 @@ class Engine(object):
                 'org.opencontainers.image.ref.name', None)
             if (name_parts['fragment'] == '' or
                     name_parts['fragment'] == entry_name):
-                yield entry
+                yield {
+                    'uri': fetched['uri'],
+                    'root': entry,
+                }
