@@ -25,8 +25,8 @@ type MerkleRoot struct {
 	// MediaType is the media type of Root.
 	MediaType string `json:"mediaType,omitempty"`
 
-	// The Merkle root object.  While this may be of any type.  OCI
-	// tools will generally use image-spec Descriptors.
+	// Root is the Merkle root object.  While this may be of any type.
+	// OCI tools will generally use image-spec Descriptors.
 	Root interface{}
 
 	// URI is the source, if any, from which Root was retrieved.  It can
