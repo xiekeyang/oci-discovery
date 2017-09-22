@@ -46,7 +46,9 @@ func (root *MerkleRoot) UnmarshalJSON(b []byte) (err error) {
 	}
 
 	mediaTypeInterface, ok := data["mediaType"]
-	if ok {
+	if !ok {
+		root.MediaType = ""
+	} else {
 		mediaTypeString, ok := mediaTypeInterface.(string)
 		if !ok {
 			return fmt.Errorf("merkle root mediaType is not a string: %v", mediaTypeInterface)
