@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+all: oci-discovery
+
+.PHONY: oci-discovery
+oci-discovery:
+	go build -o oci-discovery ./tools/cmd
+
 test: test-go test-python
 
 test-debug: test-go-debug test-python-debug
@@ -27,3 +33,6 @@ test-python:
 
 test-python-debug:
 	DEBUG=1 python3 -m unittest discover -v
+
+clean:
+	rm -f oci-discovery

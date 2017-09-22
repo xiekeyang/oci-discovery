@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/xiekeyang/oci-discovery/tools/hostbasedimagenames"
 	v1new "github.com/xiekeyang/oci-discovery/tools/newimagespec"
+	"github.com/xiekeyang/oci-discovery/tools/refengine"
 	"golang.org/x/net/context"
 )
 
@@ -104,7 +105,7 @@ func TestResolveURI(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, uri.String(), testcase.expected)
+			assert.Equal(t, testcase.expected, uri.String())
 		})
 	}
 }
@@ -115,7 +116,16 @@ func TestHandleIndexGood(t *testing.T) {
 		"uri": "https://example.com/index",
 	}
 
-	engine, err := New(ctx, nil, config)
+	uri, err := url.Parse(config["uri"])
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	request := &http.Request{
+		URL: uri,
+	}
+
+	engine, err := New(ctx, uri, config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -228,15 +238,23 @@ func TestHandleIndexGood(t *testing.T) {
 			}
 
 			response := &http.Response{
-				Body: ioutil.NopCloser(bytes.NewReader(bodyBytes)),
+				Request: request,
+				Body:    ioutil.NopCloser(bytes.NewReader(bodyBytes)),
 			}
 
-			descriptors, err := engine.(*Engine).handleIndex(response, parsedName)
+			roots, err := engine.(*Engine).handleIndex(response, parsedName)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, descriptors, testcase.expected)
+			expected := make([]refengine.MerkleRoot, len(testcase.expected))
+			for i, descriptor := range testcase.expected {
+				expected[i].MediaType = `application/vnd.oci.descriptor.v1+json`
+				expected[i].Root = descriptor
+				expected[i].URI = uri
+			}
+
+			assert.Equal(t, expected, roots)
 		})
 	}
 }
@@ -278,17 +296,17 @@ func TestHandleIndexBad(t *testing.T) {
 		{
 			label:    "manifests is not a JSON array",
 			response: `{"manifests": {}}`,
-			expected: "json: cannot unmarshal object into Go value of type []v1.Descriptor",
+			expected: `json: cannot unmarshal object into Go .* of type \[\]v1.Descriptor`,
 		},
 		{
 			label:    "manifests contains a non-object",
 			response: `{"manifests": [1]}`,
-			expected: "json: cannot unmarshal number into Go value of type v1.Descriptor",
+			expected: `json: cannot unmarshal number into Go .* of type v1.Descriptor`,
 		},
 		{
 			label:    "at least one manifests[].annotations is not a JSON object",
 			response: `{"manifests": [{"annotations": 1}]}`,
-			expected: "json: cannot unmarshal number into Go value of type map[string]string",
+			expected: `json: cannot unmarshal number into Go .* of type map\[string\]string`,
 		},
 	} {
 		t.Run(testcase.label, func(t *testing.T) {
@@ -297,12 +315,12 @@ func TestHandleIndexBad(t *testing.T) {
 				Body:    ioutil.NopCloser(strings.NewReader(testcase.response)),
 			}
 
-			descriptors, err := engine.(*Engine).handleIndex(response, parsedName)
+			roots, err := engine.(*Engine).handleIndex(response, parsedName)
 			if err == nil {
-				t.Fatalf("returned %v and did not raise the expected error", descriptors)
+				t.Fatalf("returned %v and did not raise the expected error", roots)
 			}
 
-			assert.Equal(t, err.Error(), testcase.expected)
+			assert.Regexp(t, testcase.expected, err.Error())
 		})
 	}
 }
