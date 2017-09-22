@@ -83,6 +83,9 @@ func resolveCallback(ctx context.Context, allRoots map[string][]refengine.Merkle
 		logrus.Warn(err)
 		return nil
 	}
+	if len(roots) == 0 {
+		return nil
+	}
 	allRoots[name] = roots
 	return resolved
 }
