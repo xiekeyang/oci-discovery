@@ -61,7 +61,7 @@ var resolveCommand = cli.Command{
 
 			err = refenginediscovery.Discover(
 				ctx, protocols, parsedName["host"],
-				func(ctx context.Context, refEngine refengine.Engine, casEngines []refenginediscovery.ResolvedCASEngines) error {
+				func(ctx context.Context, refEngine refengine.Engine, casEngines []refenginediscovery.ResolvedCASEngine) error {
 					return resolveCallback(ctx, allRoots, refEngine, casEngines, name)
 				})
 			if err == resolved {
@@ -77,7 +77,7 @@ var resolveCommand = cli.Command{
 	},
 }
 
-func resolveCallback(ctx context.Context, allRoots map[string][]refengine.MerkleRoot, refEngine refengine.Engine, casEngines []refenginediscovery.ResolvedCASEngines, name string) (err error) {
+func resolveCallback(ctx context.Context, allRoots map[string][]refengine.MerkleRoot, refEngine refengine.Engine, casEngines []refenginediscovery.ResolvedCASEngine, name string) (err error) {
 	roots, err := refEngine.Get(ctx, name)
 	if err != nil {
 		logrus.Warn(err)

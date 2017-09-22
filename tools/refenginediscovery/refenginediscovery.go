@@ -118,7 +118,7 @@ func (base *Base) RefEngines(ctx context.Context, refEngineCallback RefEngineCal
 			logrus.Warnf("failed to initialize %s ref engine with %v: %s", config.Protocol, config.Data, err)
 			continue
 		}
-		resolvedCASEngines := make([]ResolvedCASEngines, len(base.Config.CASEngines))
+		resolvedCASEngines := make([]ResolvedCASEngine, len(base.Config.CASEngines))
 		for i, config := range base.Config.CASEngines {
 			resolvedCASEngines[i].Config = config
 			resolvedCASEngines[i].URI = base.URI

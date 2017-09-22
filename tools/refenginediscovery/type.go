@@ -46,7 +46,7 @@ type Base struct {
 
 // ResolvedCASEngine holds a CAS-engine configuration and the URI
 // from which it was retrieved.
-type ResolvedCASEngines struct {
+type ResolvedCASEngine struct {
 
 	// Config the CAS-engine configuration.
 	Config engine.Config
@@ -58,4 +58,4 @@ type ResolvedCASEngines struct {
 }
 
 // RefEngineCallback templates a callback for use in RefEngines.
-type RefEngineCallback func(ctx context.Context, refEngine refengine.Engine, casEngines []ResolvedCASEngines) (err error)
+type RefEngineCallback func(ctx context.Context, refEngine refengine.Engine, casEngines []ResolvedCASEngine) (err error)
