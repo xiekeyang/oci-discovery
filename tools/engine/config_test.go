@@ -46,7 +46,12 @@ func TestConfigGood(t *testing.T) {
 		},
 	} {
 		t.Run(testcase.JSON, func(t *testing.T) {
-			var config Config
+			config := Config{
+				Protocol: "initial value",
+				Data: map[string]interface{}{
+					"initial": "value",
+				},
+			}
 			json.Unmarshal([]byte(testcase.JSON), &config)
 			assert.Equal(t, testcase.Expected, config)
 			marshaled, err := json.Marshal(config)

@@ -62,7 +62,14 @@ func TestMerkleRootGood(t *testing.T) {
 		},
 	} {
 		t.Run(testcase.JSON, func(t *testing.T) {
-			var root MerkleRoot
+			root := MerkleRoot{
+				MediaType: "application/initial-value",
+				Root:      "initial value",
+				URI: &url.URL{
+					Scheme: "https",
+					Host:   "initial.value.example.com",
+				},
+			}
 			json.Unmarshal([]byte(testcase.JSON), &root)
 			assert.Equal(t, testcase.Expected, root)
 			marshaled, err := json.Marshal(root)
