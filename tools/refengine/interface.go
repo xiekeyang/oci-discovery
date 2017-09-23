@@ -24,6 +24,8 @@ import (
 type Engine interface {
 
 	// Get returns an array of potential Merkle roots from the store.
+	// When no results are found, roots will be an empty array and err
+	// will be nil.
 	Get(ctx context.Context, name string) (roots []MerkleRoot, err error)
 
 	// Close releases resources held by the engine.  Subsequent engine
