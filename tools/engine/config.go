@@ -38,9 +38,13 @@ func (c *Config) UnmarshalJSON(b []byte) (err error) {
 		return err
 	}
 
-	data, ok := dataInterface.(map[string]interface{})
+	return c.unmarshalInterface(dataInterface)
+}
+
+func (c *Config) unmarshalInterface(d interface{}) (err error) {
+	data, ok := d.(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("engine config is not a JSON object: %v", dataInterface)
+		return fmt.Errorf("engine config is not a JSON object: %v", d)
 	}
 
 	protocolInterface, ok := data["protocol"]

@@ -7,18 +7,33 @@ $ oci-discovery --debug resolve example.com/app#1.0 2>/tmp/log
 {
   "example.com/app#1.0": [
     {
+      "casEngines": [
+        {
+          "config": {
+            "protocol": "oci-cas-template-v1",
+            "uri": "/cas/{algorithm}/{encoded}"
+          },
+          "uri": "https://example.com/.well-known/oci-host-ref-engines"
+        }
+      ],
       "mediaType": "application/vnd.oci.descriptor.v1+json",
       "root": {
-        "mediaType": "application/vnd.oci.image.manifest.v1+json",
-        "digest": "sha256:e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3"
-        "size": 799,
+        "digest": "sha256:e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3",
         "annotations": {
           "org.opencontainers.image.ref.name": "1.0"
         },
+        "casEngines": [
+          {
+            "protocol": "oci-cas-template-v1",
+            "uri": "https://a.example.com/cas/{algorithm}/{encoded:2}/{encoded}"
+          }
+        ],
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
         "platform": {
           "architecture": "ppc64le",
           "os": "linux"
-        }
+        },
+        "size": 799
       },
       "uri": "https://example.com/oci-index/app"
     }

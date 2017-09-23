@@ -22,6 +22,7 @@ import (
 	"net/url"
 
 	"github.com/sirupsen/logrus"
+	"github.com/xiekeyang/oci-discovery/tools/engine"
 	"github.com/xiekeyang/oci-discovery/tools/refengine"
 	"golang.org/x/net/context"
 )
@@ -113,17 +114,17 @@ func (base *Base) RefEngines(ctx context.Context, refEngineCallback RefEngineCal
 			logrus.Debugf("unsupported ref-engine protocol %q (%v)", config.Protocol, refengine.Constructors)
 			continue
 		}
-		engine, err := constructor(ctx, base.URI, config.Data)
+		eng, err := constructor(ctx, base.URI, config.Data)
 		if err != nil {
 			logrus.Warnf("failed to initialize %s ref engine with %v: %s", config.Protocol, config.Data, err)
 			continue
 		}
-		resolvedCASEngines := make([]ResolvedCASEngine, len(base.Config.CASEngines))
+		CASEngines := make([]engine.Reference, len(base.Config.CASEngines))
 		for i, config := range base.Config.CASEngines {
-			resolvedCASEngines[i].Config = config
-			resolvedCASEngines[i].URI = base.URI
+			CASEngines[i].Config = config
+			CASEngines[i].URI = base.URI
 		}
-		err = refEngineCallback(ctx, engine, resolvedCASEngines)
+		err = refEngineCallback(ctx, eng, CASEngines)
 		if err != nil {
 			return err
 		}
