@@ -44,18 +44,5 @@ type Base struct {
 	URI *url.URL
 }
 
-// ResolvedCASEngine holds a CAS-engine configuration and the URI
-// from which it was retrieved.
-type ResolvedCASEngine struct {
-
-	// Config the CAS-engine configuration.
-	Config engine.Config
-
-	// URI is the source, if any, from which Config was retrieved.  It
-	// can be used to expand any relative reference contained within
-	// Config.
-	URI *url.URL
-}
-
 // RefEngineCallback templates a callback for use in RefEngines.
-type RefEngineCallback func(ctx context.Context, refEngine refengine.Engine, casEngines []ResolvedCASEngine) (err error)
+type RefEngineCallback func(ctx context.Context, refEngine refengine.Engine, casEngines []engine.Reference) (err error)

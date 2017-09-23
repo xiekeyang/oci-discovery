@@ -23,7 +23,7 @@ import (
 // MerkleRoot holds a single resolved Merkle root.
 type MerkleRoot struct {
 	// MediaType is the media type of Root.
-	MediaType string `json:"mediaType,omitempty"`
+	MediaType string
 
 	// Root is the Merkle root object.  While this may be of any type.
 	// OCI tools will generally use image-spec Descriptors.
@@ -34,6 +34,11 @@ type MerkleRoot struct {
 	URI *url.URL
 }
 
+// UnmarshalJSON reads 'mediaType', 'root', and 'uri' properties into
+// MediaType, Root, and URI respectively.  The main difference from
+// the stock json.Unmarshal implementation is that the 'uri' value is
+// read from a string instead of from an object with Scheme, Host,
+// etc. properties.
 func (root *MerkleRoot) UnmarshalJSON(b []byte) (err error) {
 	var dataInterface interface{}
 	if err := json.Unmarshal(b, &dataInterface); err != nil {
@@ -73,6 +78,10 @@ func (root *MerkleRoot) UnmarshalJSON(b []byte) (err error) {
 	return nil
 }
 
+// MarshalJSON writes 'mediaType', 'root', and 'uri' properties to the
+// output object.  The main difference from the stock json.Marshal
+// implementation is that the 'uri' value is written as a string
+// instead of an object with Scheme, Host, etc. properties.
 func (root MerkleRoot) MarshalJSON() ([]byte, error) {
 	data := map[string]interface{}{}
 	if root.MediaType != "" {

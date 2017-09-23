@@ -21,6 +21,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"github.com/xiekeyang/oci-discovery/tools/engine"
 	"github.com/xiekeyang/oci-discovery/tools/hostbasedimagenames"
 	"github.com/xiekeyang/oci-discovery/tools/refengine"
 	"github.com/xiekeyang/oci-discovery/tools/refenginediscovery"
@@ -29,6 +30,33 @@ import (
 
 // resolved is a flag for breaking discovery iteration.
 var resolved = fmt.Errorf("satisfactory resolution")
+
+type resolvedName struct {
+	refengine.MerkleRoot
+
+	// CASEngines holds the ref-engines object's CAS-engine suggestions,
+	// if any.
+	CASEngines []engine.Reference
+}
+
+// Add casEngines as a sibling of the MerkleRoot properties.
+func (resolved resolvedName) MarshalJSON() ([]byte, error) {
+	b, err := json.Marshal(resolved.MerkleRoot)
+	if err != nil {
+		return nil, err
+	}
+
+	var data map[string]interface{}
+	err = json.Unmarshal(b, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	if resolved.CASEngines != nil {
+		data["casEngines"] = resolved.CASEngines
+	}
+	return json.Marshal(data)
+}
 
 var resolveCommand = cli.Command{
 	Name:  "resolve",
@@ -45,7 +73,7 @@ var resolveCommand = cli.Command{
 	},
 	Action: func(c *cli.Context) error {
 		ctx := context.Background()
-		allRoots := map[string][]refengine.MerkleRoot{}
+		resolvedNames := map[string][]resolvedName{}
 
 		protocols := []string{}
 		if c.IsSet("protocol") {
@@ -61,8 +89,8 @@ var resolveCommand = cli.Command{
 
 			err = refenginediscovery.Discover(
 				ctx, protocols, parsedName["host"],
-				func(ctx context.Context, refEngine refengine.Engine, casEngines []refenginediscovery.ResolvedCASEngine) error {
-					return resolveCallback(ctx, allRoots, refEngine, casEngines, name)
+				func(ctx context.Context, refEngine refengine.Engine, casEngines []engine.Reference) error {
+					return resolveCallback(ctx, resolvedNames, refEngine, casEngines, name)
 				})
 			if err == resolved {
 				continue
@@ -73,11 +101,11 @@ var resolveCommand = cli.Command{
 
 		encoder := json.NewEncoder(os.Stdout)
 		encoder.SetIndent("", "\t")
-		return encoder.Encode(allRoots)
+		return encoder.Encode(resolvedNames)
 	},
 }
 
-func resolveCallback(ctx context.Context, allRoots map[string][]refengine.MerkleRoot, refEngine refengine.Engine, casEngines []refenginediscovery.ResolvedCASEngine, name string) (err error) {
+func resolveCallback(ctx context.Context, resolvedNames map[string][]resolvedName, refEngine refengine.Engine, casEngines []engine.Reference, name string) (err error) {
 	roots, err := refEngine.Get(ctx, name)
 	if err != nil {
 		logrus.Warn(err)
@@ -86,6 +114,10 @@ func resolveCallback(ctx context.Context, allRoots map[string][]refengine.Merkle
 	if len(roots) == 0 {
 		return nil
 	}
-	allRoots[name] = roots
+	resolvedNames[name] = make([]resolvedName, len(roots))
+	for i, root := range roots {
+		resolvedNames[name][i].MerkleRoot = root
+		resolvedNames[name][i].CASEngines = casEngines
+	}
 	return resolved
 }
