@@ -110,7 +110,13 @@ func (engine *Engine) Get(ctx context.Context, name string) (roots []refengine.M
 		return nil, fmt.Errorf("requested %s from %s but got %s", request.Header.Get(`Accept`), request.URL, mediatype)
 	}
 
-	return engine.handleIndex(mediatype, response, parsedName)
+	var index v1.Index
+	if err := json.NewDecoder(response.Body).Decode(&index); err != nil {
+		logrus.Errorf("%s claimed to return %s, but the response schema did not match: %s", response.Request.URL, mediatype, err)
+		return roots, err
+	}
+
+	return engine.getMerkleRoots(index, response.Request.URL, parsedName)
 }
 
 // Close releases resources held by the engine.
@@ -133,16 +139,8 @@ func (engine *Engine) resolveURI(parsedName map[string]string) (uri *url.URL, er
 	return uri, nil
 }
 
-func (engine *Engine) handleIndex(mediatype string, response *http.Response, parsedName map[string]string) (roots []refengine.MerkleRoot, err error) {
+func (engine *Engine) getMerkleRoots(index v1.Index, uri *url.URL, parsedName map[string]string) (roots []refengine.MerkleRoot, err error) {
 	roots = []refengine.MerkleRoot{}
-	var index v1.Index
-
-	// FIXME: check response content type (and charset?)
-
-	if err := json.NewDecoder(response.Body).Decode(&index); err != nil {
-		logrus.Errorf("%s claimed to return %s, but the response schema did not match: %s", response.Request.URL, mediatype, err)
-		return roots, err
-	}
 
 	for _, descriptor := range index.Manifests {
 		fragment, ok := parsedName["fragment"]
@@ -150,7 +148,7 @@ func (engine *Engine) handleIndex(mediatype string, response *http.Response, par
 			roots = append(roots, refengine.MerkleRoot{
 				MediaType: `application/vnd.oci.descriptor.v1+json`,
 				Root:      descriptor,
-				URI:       response.Request.URL, // FIXME: get URI after any redirects
+				URI:       uri, // FIXME: get URI after any redirects
 			})
 		}
 	}
