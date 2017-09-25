@@ -15,19 +15,100 @@
 package indextemplate
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/stretchr/testify/assert"
+	"github.com/xiekeyang/oci-discovery/tools/engine"
 	"github.com/xiekeyang/oci-discovery/tools/hostbasedimagenames"
 	v1new "github.com/xiekeyang/oci-discovery/tools/newimagespec"
 	"github.com/xiekeyang/oci-discovery/tools/refengine"
 	"golang.org/x/net/context"
 )
 
-func TestResolveURI(t *testing.T) {
+func TestNewFromEngineConfigGood(t *testing.T) {
+	ctx := context.Background()
+	config := engine.Config{
+		Data: map[string]interface{}{
+			"uri": "a/b",
+		},
+	}
+	base, err := url.Parse("https://example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	engine, err := New(ctx, base, config.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = engine.Close(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestNewFromConfigBad(t *testing.T) {
+	ctx := context.Background()
+	base, err := url.Parse("https://example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, testcase := range []struct {
+		name     string
+		config   interface{}
+		expected string
+	}{
+		{
+			name:     "config not a map",
+			config:   "not a map",
+			expected: `index template config is not a map\[string\]string: .*`,
+		},
+		{
+			name:     "string->string config missing 'uri' property",
+			config:   map[string]string{},
+			expected: `index template config missing required 'uri' property: .*`,
+		},
+		{
+			name:     "string->interface config missing 'uri' property",
+			config:   map[string]interface{}{},
+			expected: `index template config missing required 'uri' property: .*`,
+		},
+		{
+			name: "uri not a string",
+			config: map[string]interface{}{
+				"uri": 1,
+			},
+			expected: `index template config 'uri' is not a string: .*`,
+		},
+		{
+			name: "uri string not a URI Template",
+			config: map[string]string{
+				"uri": "{",
+			},
+			expected: `malformed template`,
+		},
+	} {
+		t.Run(testcase.name, func(t *testing.T) {
+			_, err := New(ctx, base, testcase.config)
+			if err == nil {
+				t.Fatalf("expected %s", testcase.expected)
+			}
+			assert.Regexp(t, testcase.expected, err.Error())
+		})
+	}
+}
+
+func TestGetPreFetchGood(t *testing.T) {
 	ctx := context.Background()
 	parsedName, err := hostbasedimagenames.Parse("example.com/a#1.0")
 	if err != nil {
@@ -94,52 +175,72 @@ func TestResolveURI(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			defer engine.Close(ctx)
 
-			uri, err := engine.(*Engine).resolveURI(parsedName)
+			request, err := engine.(*Engine).getPreFetch(parsedName)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			assert.Equal(t, testcase.expected, uri.String())
+			uri, err := url.Parse(testcase.expected)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			expected := &http.Request{
+				Method: "GET",
+				URL:    uri,
+				Header: map[string][]string{
+					"Accept": {"application/vnd.oci.image.index.v1+json"},
+				},
+			}
+
+			assert.Equal(t, expected, request)
 		})
 	}
 }
 
-func TestGetMerkleRoots(t *testing.T) {
-	index := v1new.Index{
-		Manifests: []v1new.Descriptor{
-			{
-				Descriptor: v1.Descriptor{
-					Size: 1,
-				},
-			},
-			{
-				Descriptor: v1.Descriptor{
-					Size: 2,
-					Annotations: map[string]string{
-						"org.opencontainers.image.ref.name": "1.0",
-					},
-				},
-			},
-		},
+func TestGetPreFetchBad(t *testing.T) {
+	ctx := context.Background()
+	config := map[string]string{
+		"uri": "{+path}",
 	}
 
-	expDescriptors := []v1new.Descriptor{
-		{
-			Descriptor: v1.Descriptor{
-				Size: 1,
-			},
-		},
-		{
-			Descriptor: v1.Descriptor{
-				Size: 2,
-				Annotations: map[string]string{
-					"org.opencontainers.image.ref.name": "1.0",
-				},
-			},
-		},
+	base, err := url.Parse("https://example.com")
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	engine, err := New(ctx, base, config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer engine.Close(ctx)
+
+	for _, testcase := range []struct {
+		name       string
+		parsedName map[string]string
+		expected   string
+	}{
+		{
+			name: "no scheme",
+			parsedName: map[string]string{
+				"path": ":",
+			},
+			expected: "parse :: missing protocol scheme",
+		},
+	} {
+		t.Run(testcase.name, func(t *testing.T) {
+			request, err := engine.(*Engine).getPreFetch(testcase.parsedName)
+			if err == nil {
+				t.Fatalf("returned %s and did not raise the expected error", request.URL)
+			}
+			assert.Regexp(t, testcase.expected, err.Error())
+		})
+	}
+}
+
+func TestGetPostFetchGood(t *testing.T) {
 	ctx := context.Background()
 	config := map[string]string{
 		"uri": "https://example.com/index",
@@ -150,33 +251,112 @@ func TestGetMerkleRoots(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	request := &http.Request{
+		URL: uri,
+		Header: map[string][]string{
+			"Accept": {"application/vnd.oci.image.index.v1+json"},
+		},
+	}
+
 	engine, err := New(ctx, uri, config)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer engine.Close(ctx)
 
 	for _, testcase := range []struct {
 		label    string
 		name     string
-		index    v1new.Index
+		response *v1new.Index
 		expected []v1new.Descriptor
 	}{
 		{
-			label:    "empty fragment returns all entries",
-			name:     "example.com/a",
-			index:    index,
-			expected: expDescriptors,
+			label: "empty fragment returns all entries",
+			name:  "example.com/a",
+			response: &v1new.Index{
+				Manifests: []v1new.Descriptor{
+					{
+						Descriptor: v1.Descriptor{
+							Size: 1,
+						},
+					},
+					{
+						Descriptor: v1.Descriptor{
+							Size: 2,
+							Annotations: map[string]string{
+								"org.opencontainers.image.ref.name": "1.0",
+							},
+						},
+					},
+				},
+			},
+			expected: []v1new.Descriptor{
+				{
+					Descriptor: v1.Descriptor{
+						Size: 1,
+					},
+				},
+				{
+					Descriptor: v1.Descriptor{
+						Size: 2,
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0",
+						},
+					},
+				},
+			},
 		},
 		{
-			label:    "nonempty fragment returns only matching entries",
-			name:     "example.com/a#1.0",
-			index:    index,
-			expected: expDescriptors[1:],
+			label: "nonempty fragment returns only matching entries",
+			name:  "example.com/a#1.0",
+			response: &v1new.Index{
+				Manifests: []v1new.Descriptor{
+					{
+						Descriptor: v1.Descriptor{
+							Size: 1,
+						},
+					},
+					{
+						Descriptor: v1.Descriptor{
+							Size: 2,
+							Annotations: map[string]string{
+								"org.opencontainers.image.ref.name": "1.0",
+							},
+						},
+					},
+				},
+			},
+			expected: []v1new.Descriptor{
+				{
+					Descriptor: v1.Descriptor{
+						Size: 2,
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0",
+						},
+					},
+				},
+			},
 		},
 		{
-			label:    "unmatched fragment returns no entries",
-			name:     "example.com/a#2.0",
-			index:    index,
+			label: "unmatched fragment returns no entries",
+			name:  "example.com/a#2.0",
+			response: &v1new.Index{
+				Manifests: []v1new.Descriptor{
+					{
+						Descriptor: v1.Descriptor{
+							Size: 1,
+						},
+					},
+					{
+						Descriptor: v1.Descriptor{
+							Size: 2,
+							Annotations: map[string]string{
+								"org.opencontainers.image.ref.name": "1.0",
+							},
+						},
+					},
+				},
+			},
 			expected: []v1new.Descriptor{},
 		},
 	} {
@@ -186,7 +366,20 @@ func TestGetMerkleRoots(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			roots, err := engine.(*Engine).getMerkleRoots(testcase.index, uri, parsedName)
+			bodyBytes, err := json.Marshal(testcase.response)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			response := &http.Response{
+				Request: request,
+				Header: map[string][]string{
+					"Content-Type": {"application/vnd.oci.image.index.v1+json; charset=utf-8"},
+				},
+				Body: ioutil.NopCloser(bytes.NewReader(bodyBytes)),
+			}
+
+			roots, err := engine.(*Engine).getPostFetch(response, parsedName)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -199,6 +392,96 @@ func TestGetMerkleRoots(t *testing.T) {
 			}
 
 			assert.Equal(t, expected, roots)
+		})
+	}
+}
+
+func TestGetPostFetchBad(t *testing.T) {
+	ctx := context.Background()
+	config := map[string]string{
+		"uri": "https://example.com/index",
+	}
+
+	engine, err := New(ctx, nil, config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer engine.Close(ctx)
+
+	parsedName, err := hostbasedimagenames.Parse("example.com/a")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	uri, err := url.Parse(config["uri"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := &http.Request{
+		URL: uri,
+		Header: map[string][]string{
+			"Accept": {"application/vnd.oci.image.index.v1+json"},
+		},
+	}
+
+	for _, testcase := range []struct {
+		label     string
+		mediaType string
+		body      string
+		expected  string
+	}{
+		{
+			label:     "invalid media type",
+			mediaType: "a/b/c",
+			body:      "",
+			expected:  `mime: unexpected content after media subtype`,
+		},
+		{
+			label:     "unexpected media type",
+			mediaType: "application/octet-stream",
+			body:      "",
+			expected:  `requested application/vnd.oci.image.index.v1\+json from https://example.com/index but got application/octet-stream`,
+		},
+		{
+			label:     "index is not a JSON object",
+			mediaType: "application/vnd.oci.image.index.v1+json",
+			body:      "[]",
+			expected:  "json: cannot unmarshal array into Go value of type v1.Index",
+		},
+		{
+			label:     "manifests is not a JSON array",
+			mediaType: "application/vnd.oci.image.index.v1+json",
+			body:      `{"manifests": {}}`,
+			expected:  `json: cannot unmarshal object into Go .* of type \[\]v1.Descriptor`,
+		},
+		{
+			label:     "manifests contains a non-object",
+			mediaType: "application/vnd.oci.image.index.v1+json",
+			body:      `{"manifests": [1]}`,
+			expected:  `json: cannot unmarshal number into Go .* of type v1.Descriptor`,
+		},
+		{
+			label:     "at least one manifests[].annotations is not a JSON object",
+			mediaType: "application/vnd.oci.image.index.v1+json",
+			body:      `{"manifests": [{"annotations": 1}]}`,
+			expected:  `json: cannot unmarshal number into Go .* of type map\[string\]string`,
+		},
+	} {
+		t.Run(testcase.label, func(t *testing.T) {
+			response := &http.Response{
+				Request: request,
+				Header: map[string][]string{
+					"Content-Type": {fmt.Sprintf("%s; charset=utf-8", testcase.mediaType)},
+				},
+				Body: ioutil.NopCloser(strings.NewReader(testcase.body)),
+			}
+
+			roots, err := engine.(*Engine).getPostFetch(response, parsedName)
+			if err == nil {
+				t.Fatalf("returned %v and did not raise the expected error", roots)
+			}
+
+			assert.Regexp(t, testcase.expected, err.Error())
 		})
 	}
 }
