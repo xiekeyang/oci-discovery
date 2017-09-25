@@ -1,10 +1,12 @@
 # OCI Image Discovery Specifications
 
-This repository contains a [ref-engine discovery](glossary.md#ref-engine-discovery) specification:
+This repository contains two [ref-engine discovery](glossary.md#ref-engine-discovery) specifications:
 
 * [OCI Well Known URI Ref-Engine Discovery](well-known-uri-ref-engine-discovery.md).
     There is a [Go][] implementation in [`tools/refenginediscovery/wellknownuri`](tools/refenginediscovery/wellknownuri).
     There is a [Python 3][python3] implementation in [`oci_discovery.ref_engine_discovery`](oci_discovery/ref_engine_discovery).
+* [OCI XDG Ref-Engine Discovery](xdg-ref-engine-discovery.md).
+    There is a Go implementation in [`tools/refenginediscovery/xdg`](tools/refenginediscovery/xdg).
 
 This repository also contains some related specifications:
 
@@ -16,7 +18,7 @@ This repository also contains some related specifications:
     There is a Python 3 implementation in [`oci_discovery.ref_engine.oci_index_template`](oci_discovery/ref_engine/oci_index_template).
 * [OCI CAS Template Protocol](cas-template.md)
 
-This repository also contains registries for ref- and CAS-engine protocols:
+This repository also contains registries for [ref-](glossary.md#ref-engine) and [CAS-engine](glossary.md#cas-engine) protocols:
 
 * [Ref-Engine Protocols](ref-engine-prococols.md).
     There is a Go implemention in [`tools/refengine`](tools/refengine).

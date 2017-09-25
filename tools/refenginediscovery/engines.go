@@ -21,15 +21,17 @@ import (
 	"golang.org/x/net/context"
 )
 
-// ResolvedNameCallback templates a callback for use in Discover.
+// ResolvedNameCallback templates a callback for use in ResolveName.
 type ResolvedNameCallback func(ctx context.Context, root refengine.MerkleRoot, casEngines []engine.Reference) (err error)
 
-// FIXME: ResolveName calculates ref engines using Ref-Engine Discovery and
-// calls RefEngines on each one.  Discover returns any errors returned
-// by RefEngines and aborts further iteration.  Other errors (e.g. in
-// fetching a ref-engine discovery object from a particular
-// protocol/host pair) generate logged warnings but are otherwise
-// ignored.
+// ResolveName iterates over engines calling Engine.RefEngines to get
+// potential ref-engine configs.  Then it iterates over those
+// ref-engine configs, instantiates a ref engine, and queries that ref
+// engine for matching Merkle roots, calling resolvedNameCallback on
+// each one.  ResolveName returns any errors returned by
+// resolvedNameCallback and aborts further iteration.  Other errors
+// (e.g. in initializing a ref engine) generate logged warnings but
+// are otherwise ignored.
 func ResolveName(ctx context.Context, engines []Engine, name string, resolvedNameCallback ResolvedNameCallback) (err error) {
 	for _, engine := range engines {
 		err = engine.RefEngines(
