@@ -15,13 +15,8 @@
 package indextemplate
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"net/url"
-	"strings"
 	"testing"
 
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
@@ -110,7 +105,41 @@ func TestResolveURI(t *testing.T) {
 	}
 }
 
-func TestHandleIndexGood(t *testing.T) {
+func TestGetMerkleRoots(t *testing.T) {
+	index := v1new.Index{
+		Manifests: []v1new.Descriptor{
+			{
+				Descriptor: v1.Descriptor{
+					Size: 1,
+				},
+			},
+			{
+				Descriptor: v1.Descriptor{
+					Size: 2,
+					Annotations: map[string]string{
+						"org.opencontainers.image.ref.name": "1.0",
+					},
+				},
+			},
+		},
+	}
+
+	expDescriptors := []v1new.Descriptor{
+		{
+			Descriptor: v1.Descriptor{
+				Size: 1,
+			},
+		},
+		{
+			Descriptor: v1.Descriptor{
+				Size: 2,
+				Annotations: map[string]string{
+					"org.opencontainers.image.ref.name": "1.0",
+				},
+			},
+		},
+	}
+
 	ctx := context.Background()
 	config := map[string]string{
 		"uri": "https://example.com/index",
@@ -121,10 +150,6 @@ func TestHandleIndexGood(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := &http.Request{
-		URL: uri,
-	}
-
 	engine, err := New(ctx, uri, config)
 	if err != nil {
 		t.Fatal(err)
@@ -133,96 +158,25 @@ func TestHandleIndexGood(t *testing.T) {
 	for _, testcase := range []struct {
 		label    string
 		name     string
-		response *v1new.Index
+		index    v1new.Index
 		expected []v1new.Descriptor
 	}{
 		{
-			label: "empty fragment returns all entries",
-			name:  "example.com/a",
-			response: &v1new.Index{
-				Manifests: []v1new.Descriptor{
-					{
-						Descriptor: v1.Descriptor{
-							Size: 1,
-						},
-					},
-					{
-						Descriptor: v1.Descriptor{
-							Size: 2,
-							Annotations: map[string]string{
-								"org.opencontainers.image.ref.name": "1.0",
-							},
-						},
-					},
-				},
-			},
-			expected: []v1new.Descriptor{
-				{
-					Descriptor: v1.Descriptor{
-						Size: 1,
-					},
-				},
-				{
-					Descriptor: v1.Descriptor{
-						Size: 2,
-						Annotations: map[string]string{
-							"org.opencontainers.image.ref.name": "1.0",
-						},
-					},
-				},
-			},
+			label:    "empty fragment returns all entries",
+			name:     "example.com/a",
+			index:    index,
+			expected: expDescriptors,
 		},
 		{
-			label: "nonempty fragment returns only matching entries",
-			name:  "example.com/a#1.0",
-			response: &v1new.Index{
-				Manifests: []v1new.Descriptor{
-					{
-						Descriptor: v1.Descriptor{
-							Size: 1,
-						},
-					},
-					{
-						Descriptor: v1.Descriptor{
-							Size: 2,
-							Annotations: map[string]string{
-								"org.opencontainers.image.ref.name": "1.0",
-							},
-						},
-					},
-				},
-			},
-			expected: []v1new.Descriptor{
-				{
-					Descriptor: v1.Descriptor{
-						Size: 2,
-						Annotations: map[string]string{
-							"org.opencontainers.image.ref.name": "1.0",
-						},
-					},
-				},
-			},
+			label:    "nonempty fragment returns only matching entries",
+			name:     "example.com/a#1.0",
+			index:    index,
+			expected: expDescriptors[1:],
 		},
 		{
-			label: "unmatched fragment returns no entries",
-			name:  "example.com/a#2.0",
-			response: &v1new.Index{
-				Manifests: []v1new.Descriptor{
-					{
-						Descriptor: v1.Descriptor{
-							Size: 1,
-						},
-					},
-					{
-						Descriptor: v1.Descriptor{
-							Size: 2,
-							Annotations: map[string]string{
-								"org.opencontainers.image.ref.name": "1.0",
-							},
-						},
-					},
-				},
-			},
+			label:    "unmatched fragment returns no entries",
+			name:     "example.com/a#2.0",
+			index:    index,
 			expected: []v1new.Descriptor{},
 		},
 	} {
@@ -232,17 +186,7 @@ func TestHandleIndexGood(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			bodyBytes, err := json.Marshal(testcase.response)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			response := &http.Response{
-				Request: request,
-				Body:    ioutil.NopCloser(bytes.NewReader(bodyBytes)),
-			}
-
-			roots, err := engine.(*Engine).handleIndex(response, parsedName)
+			roots, err := engine.(*Engine).getMerkleRoots(testcase.index, uri, parsedName)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -255,72 +199,6 @@ func TestHandleIndexGood(t *testing.T) {
 			}
 
 			assert.Equal(t, expected, roots)
-		})
-	}
-}
-
-func TestHandleIndexBad(t *testing.T) {
-	ctx := context.Background()
-	config := map[string]string{
-		"uri": "https://example.com/index",
-	}
-
-	engine, err := New(ctx, nil, config)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	parsedName, err := hostbasedimagenames.Parse("example.com/a")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	uri, err := url.Parse(config["uri"])
-	if err != nil {
-		t.Fatal(err)
-	}
-	request := &http.Request{
-		URL: uri,
-	}
-
-	for _, testcase := range []struct {
-		label    string
-		response string
-		expected string
-	}{
-		{
-			label:    "index is not a JSON object",
-			response: "[]",
-			expected: "json: cannot unmarshal array into Go value of type v1.Index",
-		},
-		{
-			label:    "manifests is not a JSON array",
-			response: `{"manifests": {}}`,
-			expected: `json: cannot unmarshal object into Go .* of type \[\]v1.Descriptor`,
-		},
-		{
-			label:    "manifests contains a non-object",
-			response: `{"manifests": [1]}`,
-			expected: `json: cannot unmarshal number into Go .* of type v1.Descriptor`,
-		},
-		{
-			label:    "at least one manifests[].annotations is not a JSON object",
-			response: `{"manifests": [{"annotations": 1}]}`,
-			expected: `json: cannot unmarshal number into Go .* of type map\[string\]string`,
-		},
-	} {
-		t.Run(testcase.label, func(t *testing.T) {
-			response := &http.Response{
-				Request: request,
-				Body:    ioutil.NopCloser(strings.NewReader(testcase.response)),
-			}
-
-			roots, err := engine.(*Engine).handleIndex(response, parsedName)
-			if err == nil {
-				t.Fatalf("returned %v and did not raise the expected error", roots)
-			}
-
-			assert.Regexp(t, testcase.expected, err.Error())
 		})
 	}
 }
