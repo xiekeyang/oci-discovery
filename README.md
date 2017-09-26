@@ -1,18 +1,25 @@
 # OCI Image Discovery Specifications
 
-This repository contains the [OCI Ref-Engine Discovery specification](ref-engine-discovery.md) and related specifications as an extention to the [image specification][image-spec]:
+This repository contains a [ref-engine discovery](glossary.md#ref-engine-discovery) specification:
+
+* [OCI Well Known URI Ref-Engine Discovery](well-known-uri-ref-engine-discovery.md).
+    There is a [Go][] implementation in [`tools/refenginediscovery/wellknownuri`](tools/refenginediscovery/wellknownuri).
+    There is a [Python 3][python3] implementation in [`oci_discovery.ref_engine_discovery`](oci_discovery/ref_engine_discovery).
+
+This repository also contains some related specifications:
 
 * [Host-Based Image Names](host-based-image-names.md)
+    There is a Go implementation in [`tools/hostbasedimagenames`](tools/hostbasedimagenames).
     There is a [Python 3][python3] implementation in [`oci_discovery.host_based_image_names`](oci_discovery/host_based_image_names).
-* [OCI Ref-Engine Discovery](ref-engine-discovery.md).
-    There is a Python 3 implementation in [`oci_discovery.ref_engine_discovery`](oci_discovery/ref_engine_discovery).
 * [OCI Index Template Protocol](index-template.md)
+    There is a Go implementation in [`tools/refengine/indextemplate`](tools/refengine/indextemplate).
     There is a Python 3 implementation in [`oci_discovery.ref_engine.oci_index_template`](oci_discovery/ref_engine/oci_index_template).
 * [OCI CAS Template Protocol](cas-template.md)
 
 This repository also contains registries for ref- and CAS-engine protocols:
 
 * [Ref-Engine Protocols](ref-engine-prococols.md).
+    There is a Go implemention in [`tools/refengine`](tools/refengine).
     There is a Python 3 implementation in [`oci_discovery.ref_engine.CONSTRUCTORS`](oci_discovery/ref_engine/__init__.py).
 * [CAS-Engine Protocols](cas-engine-protocols.md).
 
@@ -153,7 +160,7 @@ http {
 }
 ```
 
-Then in `/srv/example.com/.well-known/oci-host-ref-engines`, the following [ref-engines object](ref-engine-discovery.md#ref-engines-objects):
+Then in `/srv/example.com/.well-known/oci-host-ref-engines`, the following [ref-engines object](well-known-uri-ref-engine-discovery.md#ref-engines-objects):
 
 ```json
 {
@@ -236,7 +243,7 @@ All the CAS blobs can go in the same bucket under `/srv/example.com/oci-cas`, al
 ## Example: Serving OCI layouts from Nginx
 
 As an alternative to the [previous example](#example-serving-everything-from-one-nginx-server), you can bucket your CAS blobs by serving [OCI layouts][layout] directly.
-If your layout `index.json` are not setting `casEngines` and you are unwilling to update them to do so, you can [set `casEngines` in you ref-engines object](ref-engine-discovery.md#ref-engines-objects) at `/srv/example.com/.well-known/oci-host-ref-engines`:
+If your layout `index.json` are not setting `casEngines` and you are unwilling to update them to do so, you can [set `casEngines` in you ref-engines object](well-known-uri-ref-engine-discovery.md#ref-engines-objects) at `/srv/example.com/.well-known/oci-host-ref-engines`:
 
 ```json
 {
@@ -268,6 +275,7 @@ location ~ ^/oci-image/.*/index.json$ {
 }
 ```
 
+[Go]: https://golang.org/
 [image-spec]: https://github.com/opencontainers/image-spec
 [image-spec-canonical-json]: https://github.com/opencontainers/image-spec/blob/v1.0.0/considerations.md#json
 [layout]: https://github.com/opencontainers/image-spec/blob/v1.0.0/image-layout.md

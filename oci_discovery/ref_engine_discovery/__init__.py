@@ -29,7 +29,7 @@ _LOGGER = _logging.getLogger(__name__)
 def resolve(name, protocols=('https', 'http'), port=None):
     """Resolve an image name to a Merkle root.
 
-    Implementing ref-engine-discovery.md
+    Implementing well-known-uri-ref-engine-discovery.md
     """
     name_parts = _host_based_image_names.parse(name=name)
     for protocol in protocols:
