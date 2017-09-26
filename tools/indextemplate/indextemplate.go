@@ -78,22 +78,13 @@ func (engine *Engine) Get(ctx context.Context, name string) (roots []refengine.M
 		return nil, err
 	}
 
-	uri, err := engine.resolveURI(parsedName)
+	request, err := engine.getPreFetch(parsedName)
 	if err != nil {
 		return nil, err
 	}
-
-	client := &http.Client{}
-
-	request := &http.Request{
-		Method: "GET",
-		URL:    uri,
-		Header: map[string][]string{
-			"Accept": {"application/vnd.oci.image.index.v1+json"},
-		},
-	}
 	request = request.WithContext(ctx)
 
+	client := &http.Client{}
 	logrus.Debugf("requesting %s from %s", request.Header.Get("accept"), request.URL)
 	response, err := client.Do(request)
 	if err != nil {
@@ -101,22 +92,7 @@ func (engine *Engine) Get(ctx context.Context, name string) (roots []refengine.M
 	}
 	defer response.Body.Close()
 
-	mediatype, _, err := mime.ParseMediaType(response.Header.Get(`Content-Type`))
-	if err != nil {
-		return nil, err
-	}
-
-	if mediatype != request.Header.Get(`Accept`) {
-		return nil, fmt.Errorf("requested %s from %s but got %s", request.Header.Get(`Accept`), request.URL, mediatype)
-	}
-
-	var index v1.Index
-	if err := json.NewDecoder(response.Body).Decode(&index); err != nil {
-		logrus.Errorf("%s claimed to return %s, but the response schema did not match: %s", response.Request.URL, mediatype, err)
-		return roots, err
-	}
-
-	return engine.getMerkleRoots(index, response.Request.URL, parsedName)
+	return engine.getPostFetch(response, parsedName)
 }
 
 // Close releases resources held by the engine.
@@ -124,7 +100,7 @@ func (engine *Engine) Close(ctx context.Context) (err error) {
 	return nil
 }
 
-func (engine *Engine) resolveURI(parsedName map[string]string) (uri *url.URL, err error) {
+func (engine *Engine) getPreFetch(parsedName map[string]string) (request *http.Request, err error) {
 	referenceURI, err := engine.uri.Expand(util.StringStringToStringInterface(parsedName))
 	if err != nil {
 		return nil, err
@@ -135,24 +111,43 @@ func (engine *Engine) resolveURI(parsedName map[string]string) (uri *url.URL, er
 		return nil, err
 	}
 
-	uri = engine.base.ResolveReference(parsedReference)
-	return uri, nil
+	request = &http.Request{
+		Method: "GET",
+		URL:    engine.base.ResolveReference(parsedReference),
+		Header: map[string][]string{
+			"Accept": {"application/vnd.oci.image.index.v1+json"},
+		},
+	}
+	return request, nil
 }
 
-func (engine *Engine) getMerkleRoots(index v1.Index, uri *url.URL, parsedName map[string]string) (roots []refengine.MerkleRoot, err error) {
-	roots = []refengine.MerkleRoot{}
+func (engine *Engine) getPostFetch(response *http.Response, parsedName map[string]string) (roots []refengine.MerkleRoot, err error) {
+	mediatype, _, err := mime.ParseMediaType(response.Header.Get(`Content-Type`))
+	if err != nil {
+		return nil, err
+	}
 
+	if mediatype != response.Request.Header.Get(`Accept`) {
+		return nil, fmt.Errorf("requested %s from %s but got %s", response.Request.Header.Get(`Accept`), response.Request.URL, mediatype)
+	}
+
+	var index v1.Index
+	if err := json.NewDecoder(response.Body).Decode(&index); err != nil {
+		logrus.Errorf("%s claimed to return %s, but the response schema did not match: %s", response.Request.URL, mediatype, err)
+		return nil, err
+	}
+
+	roots = []refengine.MerkleRoot{}
 	for _, descriptor := range index.Manifests {
 		fragment, ok := parsedName["fragment"]
 		if !ok || fragment == "" || fragment == descriptor.Annotations[`org.opencontainers.image.ref.name`] {
 			roots = append(roots, refengine.MerkleRoot{
 				MediaType: `application/vnd.oci.descriptor.v1+json`,
 				Root:      descriptor,
-				URI:       uri, // FIXME: get URI after any redirects
+				URI:       response.Request.URL, // FIXME: get URI after any redirects
 			})
 		}
 	}
-
 	return roots, nil
 }
 
