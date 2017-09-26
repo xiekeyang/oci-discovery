@@ -25,6 +25,7 @@ import (
 	"github.com/xiekeyang/oci-discovery/tools/engine"
 	"github.com/xiekeyang/oci-discovery/tools/hostbasedimagenames"
 	"github.com/xiekeyang/oci-discovery/tools/refenginediscovery"
+	"github.com/xiekeyang/oci-discovery/tools/refenginediscovery/xdg"
 	"golang.org/x/net/context"
 )
 
@@ -72,18 +73,18 @@ func (eng *Engine) RefEngines(ctx context.Context, name string, refEngineCallbac
 			continue
 		}
 		var casEngines []engine.Reference
-		if reference.engines.CASEngines != nil {
-			casEngines = make([]engine.Reference, len(reference.engines.CASEngines))
-			for i, config := range reference.engines.CASEngines {
+		if reference.Engines.CASEngines != nil {
+			casEngines = make([]engine.Reference, len(reference.Engines.CASEngines))
+			for i, config := range reference.Engines.CASEngines {
 				casEngines[i].Config = config
-				casEngines[i].URI = reference.uri
+				casEngines[i].URI = reference.URI
 			}
 		}
-		for _, config := range reference.engines.RefEngines {
+		for _, config := range reference.Engines.RefEngines {
 			ref := refenginediscovery.Reference{
 				Config: engine.Reference{
 					Config: config,
-					URI:    reference.uri,
+					URI:    reference.URI,
 				},
 				CASEngines: casEngines,
 			}
@@ -102,7 +103,7 @@ func (eng *Engine) Close(ctx context.Context) (err error) {
 	return nil
 }
 
-func (eng *Engine) fetch(ctx context.Context, uri *url.URL) (ref *reference, err error) {
+func (eng *Engine) fetch(ctx context.Context, uri *url.URL) (ref *xdg.Reference, err error) {
 	request := &http.Request{
 		Method: "GET",
 		URL:    uri,
@@ -133,10 +134,10 @@ func (eng *Engine) fetch(ctx context.Context, uri *url.URL) (ref *reference, err
 		return nil, fmt.Errorf("requested %s from %s but got %s", request.Header.Get(`Accept`), request.URL, mediatype)
 	}
 
-	ref = &reference{
-		uri: uri, // FIXME: get URI after any redirects
+	ref = &xdg.Reference{
+		URI: uri, // FIXME: get URI after any redirects
 	}
-	if err := json.NewDecoder(response.Body).Decode(&ref.engines); err != nil {
+	if err := json.NewDecoder(response.Body).Decode(&ref.Engines); err != nil {
 		logrus.Errorf("ref engines object decoded failed: %s", err)
 		return nil, err
 	}

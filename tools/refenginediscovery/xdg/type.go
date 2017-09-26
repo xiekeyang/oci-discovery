@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wellknownuri
+package xdg
 
 import (
 	"net/url"
@@ -30,14 +30,14 @@ type Engines struct {
 	CASEngines []engine.Config `json:"casEngines,omitempty"`
 }
 
-// reference holds resolved Engines data.
-type reference struct {
+// Reference holds resolved Engines data.
+type Reference struct {
 
-	// engines holds the resolved Engines declaration.
-	engines Engines
+	// Engines holds the resolved Engines declaration.
+	Engines Engines
 
-	// uri is the source, if any, from which Engines was retrieved.  It
+	// URI is the source, if any, from which Engines was retrieved.  It
 	// can be used to expand any relative reference contained within
 	// Engines.
-	uri *url.URL
+	URI *url.URL
 }

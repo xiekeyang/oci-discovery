@@ -162,7 +162,7 @@ http {
 }
 ```
 
-Then in `/srv/example.com/.well-known/oci-host-ref-engines`, the following [ref-engines object](well-known-uri-ref-engine-discovery.md#ref-engines-objects):
+Then in `/srv/example.com/.well-known/oci-host-ref-engines`, the following [ref-engines object](xdg-ref-engines-discovery.md#ref-engines-objects):
 
 ```json
 {
@@ -245,7 +245,7 @@ All the CAS blobs can go in the same bucket under `/srv/example.com/oci-cas`, al
 ## Example: Serving OCI layouts from Nginx
 
 As an alternative to the [previous example](#example-serving-everything-from-one-nginx-server), you can bucket your CAS blobs by serving [OCI layouts][layout] directly.
-If your layout `index.json` are not setting `casEngines` and you are unwilling to update them to do so, you can [set `casEngines` in you ref-engines object](well-known-uri-ref-engine-discovery.md#ref-engines-objects) at `/srv/example.com/.well-known/oci-host-ref-engines`:
+If your layout `index.json` are not setting `casEngines` and you are unwilling to update them to do so, you can [set `casEngines` in you ref-engines object](xdg-ref-engines-discovery.md#ref-engines-objects) at `/srv/example.com/.well-known/oci-host-ref-engines`:
 
 ```json
 {

@@ -26,7 +26,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/xiekeyang/oci-discovery/tools/engine"
 	"github.com/xiekeyang/oci-discovery/tools/refenginediscovery"
-	"github.com/xiekeyang/oci-discovery/tools/refenginediscovery/wellknownuri"
 	"golang.org/x/net/context"
 )
 
@@ -44,10 +43,10 @@ func New(ctx context.Context, xdgPaths xdg.Paths) (engine refenginediscovery.Eng
 
 // RefEngines calculates ref engines using the XDG Ref-Engine
 // Discovery Protocol and calls refEngineCallback on each one.
-// RefEngines returns any errors returned by refEngineCallback and
-// aborts further iteration.  Other errors (e.g. in fetching a
-// configuration from the filesystem) generate logged warnings but are
-// otherwise ignored.
+// This method includes local code for filesystem retrieval, but the
+// logic for processing the retrieved data is in the RefEngines
+// function for consumers that want to reuse it outside of an XDG
+// Engine.
 func (eng *Engine) RefEngines(ctx context.Context, name string, refEngineCallback refenginediscovery.RefEngineCallback) (err error) {
 	path, err := eng.xdgPaths.ConfigFile("ref-engine-discovery.json")
 	if err != nil {
@@ -72,15 +71,37 @@ func (eng *Engine) RefEngines(ctx context.Context, name string, refEngineCallbac
 	}
 	defer file.Close()
 
-	var data map[string]wellknownuri.Engines
+	var data map[string]Engines
 	err = json.NewDecoder(file).Decode(&data)
 	if err != nil {
 		logrus.Warn(err)
 		return nil
 	}
 
+	regexpRefEngines := map[string]Reference{}
+	for key, value := range data {
+		regexpRefEngines[key] = Reference{
+			Engines: value,
+			URI:     uri,
+		}
+	}
+
+	return RefEngines(ctx, regexpRefEngines, name, refEngineCallback)
+}
+
+// Close releases resources held by the engine.
+func (eng *Engine) Close(ctx context.Context) (err error) {
+	return nil
+}
+
+// RefEngines process a regexp ref engines object, calling
+// refEngineCallback for each ref-engine config matching name.
+// RefEngines returns any errors returned by refEngineCallback and
+// aborts further iteration.  Other errors (e.g. in compiling a
+// regexp) generate logged warnings but are otherwise ignored.
+func RefEngines(ctx context.Context, regexpRefEngines map[string]Reference, name string, refEngineCallback refenginediscovery.RefEngineCallback) (err error) {
 	patterns := []string{}
-	for pattern := range data {
+	for pattern := range regexpRefEngines {
 		patterns = append(patterns, pattern)
 	}
 	sort.Sort(stringLengthSort(patterns))
@@ -93,18 +114,18 @@ func (eng *Engine) RefEngines(ctx context.Context, name string, refEngineCallbac
 		}
 		if pat.MatchString(name) {
 			var casEngines []engine.Reference
-			if data[pattern].CASEngines != nil {
-				casEngines = make([]engine.Reference, len(data[pattern].CASEngines))
-				for i, config := range data[pattern].CASEngines {
+			if regexpRefEngines[pattern].Engines.CASEngines != nil {
+				casEngines = make([]engine.Reference, len(regexpRefEngines[pattern].Engines.CASEngines))
+				for i, config := range regexpRefEngines[pattern].Engines.CASEngines {
 					casEngines[i].Config = config
-					casEngines[i].URI = uri
+					casEngines[i].URI = regexpRefEngines[pattern].URI
 				}
 			}
-			for _, config := range data[pattern].RefEngines {
+			for _, config := range regexpRefEngines[pattern].Engines.RefEngines {
 				ref := refenginediscovery.Reference{
 					Config: engine.Reference{
 						Config: config,
-						URI:    uri,
+						URI:    regexpRefEngines[pattern].URI,
 					},
 					CASEngines: casEngines,
 				}
@@ -116,10 +137,5 @@ func (eng *Engine) RefEngines(ctx context.Context, name string, refEngineCallbac
 		}
 	}
 
-	return nil
-}
-
-// Close releases resources held by the engine.
-func (eng *Engine) Close(ctx context.Context) (err error) {
 	return nil
 }

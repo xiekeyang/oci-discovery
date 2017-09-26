@@ -3,7 +3,7 @@
 This is version 1 of this specification.
 
 The CAS-template protocol is configured via a single [URI Template][rfc6570].
-When configured via a [`casEngines` entry](well-known-uri-ref-engine-discovery.md#ref-engines-objects), the `uri` property MUST be set, and its value is the URI Template.
+When configured via a [`casEngines` entry](xdg-ref-engine-discovery.md#ref-engines-objects), the `uri` property MUST be set, and its value is the URI Template.
 
 For a given blob digest, consumers MUST provide at least the following variables:
 
@@ -16,7 +16,7 @@ If the expanded URI reference is a relative reference, it MUST be resolved follo
 
 ## Example
 
-An example [`casEngines` entry](well-known-uri-ref-engine-discovery.md#ref-engines-objects) using the [registered `oci-cas-template-v1` protocol identifier](cas-engine-protocols.md) is:
+An example [`casEngines` entry](xdg-ref-engine-discovery.md#ref-engines-objects) using the [registered `oci-cas-template-v1` protocol identifier](cas-engine-protocols.md) is:
 
 ```json
 {

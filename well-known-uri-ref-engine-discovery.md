@@ -34,24 +34,8 @@ For example, if the `host` extracted from the image name is `a.b.example.com` an
 
 ## Ref-engines media types
 
-Servers supporting the [`oci-host-ref-engines` URI](#oci-host-ref-engines-well-known-uri-registration) MUST support requests for media type [`application/vnd.oci.ref-engines.v1+json`](#ref-engines-objects).
+Servers supporting the [`oci-host-ref-engines` URI](#oci-host-ref-engines-well-known-uri-registration) MUST support requests for media type [`application/vnd.oci.ref-engines.v1+json`](xdg-ref-engines-discovery.md#ref-engines-objects).
 Servers MAY support other media types using HTTP content negotiation, as described in [RFC 7231 section 3.4][rfc7231-s3.4] (which is [also supported over HTTP/2][rfc7540-s8]).
-
-## Ref-engines objects
-
-This section defines the `application/vnd.oci.ref-engines.v1+json` [media type][media-type].
-Content of this type MUST be a JSON object, as defined in [RFC 7159 section 4][rfc7159-s4].
-The object MAY include a `refEngines` entry.
-If set, the `refEngines` entry MUST be an [array][rfc7159-s5].
-Each entry in the `refEngines` array MUST be an [objects][rfc7159-s4] with at least a `protocol` entry specifying the [ref-engine protocol](ref-engine-protocols.md).
-Consumers SHOULD ignore entries which declare unsupported `protocol` values.
-The order of entries in the array is not significant.
-
-The ref-engine discovery service MAY also include `casEngines` entry if it wants to supplement suggestions made by the ref engines.
-If set, the `casEngines` entry MUST be an [array][rfc7159-s5].
-Each entry in the `casEngines` array MUST be an [objects][rfc7159-s4] with at least a `protocol` entry specifying the [CAS-engine protocol](cas-engine-protocols.md).
-Consumers SHOULD ignore entries which declare unsupported `protocol` values.
-The order of entries in the array is not significant.
 
 ### Example 1
 

@@ -8,12 +8,28 @@ Having retrieved a set of reference engines (via this and other protocols), cons
 Consumers who choose not to support this specification can safely ignore the remainder of this document.
 Consumers who choose to support this specification MAY attempt to discover and use ref engines via other channels, and only fall back to this protocol if those ref engines do not return a satisfactory Merkle root.
 
+## Ref-engines objects
+
+This section defines the `application/vnd.oci.ref-engines.v1+json` [media type][media-type].
+Content of this type MUST be a JSON object, as defined in [RFC 7159 section 4][rfc7159-s4].
+The object MAY include a `refEngines` entry.
+If set, the `refEngines` entry MUST be an [array][rfc7159-s5].
+Each entry in the `refEngines` array MUST be an [objects][rfc7159-s4] with at least a `protocol` entry specifying the [ref-engine protocol](ref-engine-protocols.md).
+Consumers SHOULD ignore entries which declare unsupported `protocol` values.
+The order of entries in the array is not significant.
+
+The ref-engine discovery service MAY also include `casEngines` entry if it wants to supplement suggestions made by the ref engines.
+If set, the `casEngines` entry MUST be an [array][rfc7159-s5].
+Each entry in the `casEngines` array MUST be an [objects][rfc7159-s4] with at least a `protocol` entry specifying the [CAS-engine protocol](cas-engine-protocols.md).
+Consumers SHOULD ignore entries which declare unsupported `protocol` values.
+The order of entries in the array is not significant.
+
 ## Regexp ref-engines objects
 
 This section defines the `application/vnd.oci.regexp-ref-engines.v1+json` [media type][media-type].
 Content of this type MUST be a JSON object, as defined in [RFC 7159 section 4][rfc7159-s4].
 Keys MUST be Extended Regular Expressions, as defined in [IEEE Std 1003.1-2008][ERE].
-Values MUST be JSON objects that conform to the [`application/vnd.oci.ref-engines.v1+json` media type](well-known-uri-ref-engine-discovery.md#ref-engines-objects).
+Values MUST be JSON objects that conform to the [`application/vnd.oci.ref-engines.v1+json` media type](#ref-engines-objects).
 
 For a given image name, consumers SHOULD treat all keys that match the image name as valid.
 When multiple keys match the image name, consumers SHOULD prefer the regexp with the longest length.
