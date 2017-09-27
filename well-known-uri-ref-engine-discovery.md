@@ -1,35 +1,13 @@
-# OCI Ref-Engine Discovery
+# OCI Well-Known URI Ref-Engine Discovery
 
 This is version 0.1 of this specification.
 
-To faciliate communication between image publishers and consumers, this specification defines a [ref-engine discovery](#ref-engine-discovery) protocol which publishers MAY use to direct consumers towards [reference engines](#ref-engine).
+To faciliate communication between image publishers and consumers, this specification defines a [ref-engine discovery](glossary.md#ref-engine-discovery) protocol which publishers MAY use to direct consumers towards [reference engines](glossary.md#ref-engine).
 Publishers who choose not to support this specification can safely ignore the remainder of this document.
 
-Having retrieved a set of reference engines (via this and other protocols), consumers can use those ref engines to recover a set of [Merkle roots](#merkle-root) potentially associated with a given image name.
+Having retrieved a set of reference engines (via this and other protocols), consumers can use those ref engines to recover a set of [Merkle roots](glossary.md#merkle-root) potentially associated with a given image name.
 Consumers who choose not to support this specification can safely ignore the remainder of this document.
 Consumers who choose to support this specification MAY attempt to discover and use ref engines via other channels, and only fall back to this protocol if those ref engines do not return a satisfactory Merkle root.
-
-## Glossary
-
-### Ref-engine discovery
-
-A service that suggests possible [ref engines](#ref-engine).
-This specification defines a ref-engine discovery protocol.
-
-### CAS engine
-
-A service that provides access to [content-addressable storage][cas].
-
-### Merkle root
-
-The root node in a [Merkle tree][Merkle-tree].
-In the OCI ecosystem, Merkle links are made via [descriptors][descriptor].
-The Merkle root may be a descriptor ([media type][media-type] [`application/vnd.oci.descriptor.v1+json`][descriptor]), or it may have a different media type.
-Merkle roots may suggest [CAS engines](#cas-engine), e.g. via a `casEngines` entry in their JSON, but that is out of scope for ref-engine discovery.
-
-### Ref engine
-
-A service that maps an image name to a set of potential [Merkle roots](#merkle-root).
 
 ## `oci-host-ref-engines` well-known URI registration
 
@@ -50,7 +28,7 @@ For example, `https://b.example.com/.well-known/oci-host-ref-engines` SHOULD pre
 Some publishers MAY provide discovery services for generic image names (for example, to provide a company policy for ref-engine suggestions).
 Those publishers MAY provide those recommendations via a [ref-engines resource](#ref-engines-media-types) at a URI of their choosing, but they SHOULD NOT serve the generic resource from `oci-host-ref-engines` to avoid distracting consumers following the protocol discussed in the following paragraph.
 
-Consumers discovering ref-engine for an image name that matches the [`host-based-image-name` rule](host-based-image-names.md) SHOULD request the `oci-host-ref-engines` resource from the host matching the `host` part.
+Consumers discovering ref engines for an image name that matches the [`host-based-image-name` rule](host-based-image-names.md) SHOULD request the `oci-host-ref-engines` resource from the host matching the `host` part.
 If retrieving that resource fails for any reason, consumers SHOULD walk the DNS ancestors of `host`.
 For example, if the `host` extracted from the image name is `a.b.example.com` and the well-known URI failed for `a.b.example.com`, the client would fall back to `b.example.com` and, if that too failed, to `example.com`.
 
@@ -114,17 +92,14 @@ $ curl -H 'Accept: application/vnd.oci.ref-engines.v1+json' https://example.com/
       "protocol": "oci-cas-template-v1",
       "uri": "https://a.example.com/cas/{algorithm}/{encoded:2}/{encoded}"
     }
-  ],
+  ]
 }
 ```
 
 The [`oci-index-template-v1` protocol](index-template.md) is [registered](ref-engine-protocols.md).
 The [`oci-cas-template-v1` protocol](cas-template.md) is [registered](cas-engine-protocols.md).
 
-[CAS]: https://en.wikipedia.org/wiki/Content-addressable_storage
-[descriptor]: https://github.com/opencontainers/image-spec/blob/v1.0.0/descriptor.md
 [media-type]: https://tools.ietf.org/html/rfc6838
-[Merkle-tree]: https://en.wikipedia.org/wiki/Merkle_tree
 [OCI]: https://www.opencontainers.org/
 [rfc1594-s5.2]: https://tools.ietf.org/html/rfc1594#section-5
 [rfc5785]: https://tools.ietf.org/html/rfc5785

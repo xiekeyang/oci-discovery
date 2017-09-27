@@ -12,18 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package refenginediscovery
+package wellknownuri
 
 import (
 	"net/url"
 
 	"github.com/xiekeyang/oci-discovery/tools/engine"
-	"github.com/xiekeyang/oci-discovery/tools/refengine"
-	"golang.org/x/net/context"
 )
 
-// Config holds application/vnd.oci.ref-engines.v1+json data.
-type Config struct {
+// Engines holds application/vnd.oci.ref-engines.v1+json data.
+type Engines struct {
 
 	// RefEngines is an array of ref-engine configurations.
 	RefEngines []engine.Config `json:"refEngines,omitempty"`
@@ -32,17 +30,14 @@ type Config struct {
 	CASEngines []engine.Config `json:"casEngines,omitempty"`
 }
 
-// Base holds a resolved ref-engines object.
-type Base struct {
+// reference holds resolved Engines data.
+type reference struct {
 
-	// Config holds the application/vnd.oci.ref-engines.v1+json data.
-	Config Config
+	// engines holds the resolved Engines declaration.
+	engines Engines
 
-	// URI is the source, if any, from which Config was retrieved.  It
+	// uri is the source, if any, from which Engines was retrieved.  It
 	// can be used to expand any relative reference contained within
-	// Config.
-	URI *url.URL
+	// Engines.
+	uri *url.URL
 }
-
-// RefEngineCallback templates a callback for use in RefEngines.
-type RefEngineCallback func(ctx context.Context, refEngine refengine.Engine, casEngines []engine.Reference) (err error)

@@ -16,20 +16,16 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/xiekeyang/oci-discovery/tools/engine"
-	"github.com/xiekeyang/oci-discovery/tools/hostbasedimagenames"
 	"github.com/xiekeyang/oci-discovery/tools/refengine"
 	"github.com/xiekeyang/oci-discovery/tools/refenginediscovery"
+	"github.com/xiekeyang/oci-discovery/tools/refenginediscovery/wellknownuri"
 	"golang.org/x/net/context"
 )
-
-// resolved is a flag for breaking discovery iteration.
-var resolved = fmt.Errorf("satisfactory resolution")
 
 type resolvedName struct {
 	refengine.MerkleRoot
@@ -80,21 +76,28 @@ var resolveCommand = cli.Command{
 			protocols = append(protocols, c.String("protocol"))
 		}
 
-		for _, name := range c.Args() {
-			parsedName, err := hostbasedimagenames.Parse(name)
-			if err != nil {
-				logrus.Warn(err)
-				continue
-			}
+		engines := []refenginediscovery.Engine{}
 
-			err = refenginediscovery.Discover(
-				ctx, protocols, parsedName["host"],
-				func(ctx context.Context, refEngine refengine.Engine, casEngines []engine.Reference) error {
-					return resolveCallback(ctx, resolvedNames, refEngine, casEngines, name)
-				})
-			if err == resolved {
-				continue
-			} else if err != nil {
+		eng, err := wellknownuri.New(ctx, protocols)
+		if err != nil {
+			logrus.Warn(err)
+		} else {
+			defer eng.Close(ctx)
+			engines = append(engines, eng)
+		}
+
+		// TODO: Add more discovery engines
+
+		for _, name := range c.Args() {
+			err = refenginediscovery.ResolveName(
+				ctx,
+				engines,
+				name,
+				func(ctx context.Context, root refengine.MerkleRoot, casEngines []engine.Reference) (err error) {
+					return resolvedNameCallback(ctx, root, casEngines, resolvedNames, name)
+				},
+			)
+			if err != nil {
 				logrus.Warn(err)
 			}
 		}
@@ -105,19 +108,14 @@ var resolveCommand = cli.Command{
 	},
 }
 
-func resolveCallback(ctx context.Context, resolvedNames map[string][]resolvedName, refEngine refengine.Engine, casEngines []engine.Reference, name string) (err error) {
-	roots, err := refEngine.Get(ctx, name)
-	if err != nil {
-		logrus.Warn(err)
-		return nil
+func resolvedNameCallback(ctx context.Context, root refengine.MerkleRoot, casEngines []engine.Reference, resolvedNames map[string][]resolvedName, name string) (err error) {
+	_, ok := resolvedNames[name]
+	if !ok {
+		resolvedNames[name] = []resolvedName{}
 	}
-	if len(roots) == 0 {
-		return nil
-	}
-	resolvedNames[name] = make([]resolvedName, len(roots))
-	for i, root := range roots {
-		resolvedNames[name][i].MerkleRoot = root
-		resolvedNames[name][i].CASEngines = casEngines
-	}
-	return resolved
+	resolvedNames[name] = append(resolvedNames[name], resolvedName{
+		MerkleRoot: root,
+		CASEngines: casEngines,
+	})
+	return nil
 }

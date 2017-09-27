@@ -21,7 +21,7 @@ from .. import host_based_image_names as _host_based_image_names
 def ancestor_hosts(host):
     """Iterate through a host and its DNS ancestors.
 
-    Following ref-engine-discovery.md#images-associated-with-a-hosts-oci-host-ref-engines
+    Following well-known-uri-ref-engine-discovery.md#images-associated-with-a-hosts-oci-host-ref-engines
     """
     if host[0] == '[':
         yield host
