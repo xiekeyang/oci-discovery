@@ -94,7 +94,7 @@ func (eng *Engine) Close(ctx context.Context) (err error) {
 	return nil
 }
 
-// RefEngines process a regexp ref engines object, calling
+// RefEngines processes a regexp ref engines object, calling
 // refEngineCallback for each ref-engine config matching name.
 // RefEngines returns any errors returned by refEngineCallback and
 // aborts further iteration.  Other errors (e.g. in compiling a
