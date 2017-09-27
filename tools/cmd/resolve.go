@@ -18,12 +18,14 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/BurntSushi/xdg"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/xiekeyang/oci-discovery/tools/engine"
 	"github.com/xiekeyang/oci-discovery/tools/refengine"
 	"github.com/xiekeyang/oci-discovery/tools/refenginediscovery"
 	"github.com/xiekeyang/oci-discovery/tools/refenginediscovery/wellknownuri"
+	xdgeng "github.com/xiekeyang/oci-discovery/tools/refenginediscovery/xdg"
 	"golang.org/x/net/context"
 )
 
@@ -78,7 +80,9 @@ var resolveCommand = cli.Command{
 
 		engines := []refenginediscovery.Engine{}
 
-		eng, err := wellknownuri.New(ctx, protocols)
+		eng, err := xdgeng.New(ctx, xdg.Paths{
+			XDGSuffix: "oci-discovery",
+		})
 		if err != nil {
 			logrus.Warn(err)
 		} else {
@@ -86,7 +90,13 @@ var resolveCommand = cli.Command{
 			engines = append(engines, eng)
 		}
 
-		// TODO: Add more discovery engines
+		eng, err = wellknownuri.New(ctx, protocols)
+		if err != nil {
+			logrus.Warn(err)
+		} else {
+			defer eng.Close(ctx)
+			engines = append(engines, eng)
+		}
 
 		for _, name := range c.Args() {
 			err = refenginediscovery.ResolveName(
