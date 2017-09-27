@@ -43,9 +43,11 @@ $ pip install -r requirements.txt
 When uritemplate is not installed, a local implementation is used instead.
 But the local stub supports only the most basic [URI Templates][rfc6570].
 
-## Using the Python 3 ref-engine discovery tool
+## Using ref-engine discovery tool
 
 The individual components are usable as libraries, but the ref-engine discovery implementation can also be used from the command line:
+
+The below shows the command by Python 3 interface:
 
 ```
 $ python3 -m oci_discovery.ref_engine_discovery -l debug example.com/app#1.0 2>/tmp/log
@@ -105,6 +107,15 @@ DEBUG:oci_discovery.ref_engine.oci_index_template:received OCI index object:
 Consumers who are trusting images based on the ref-engine discovery and ref-engine servers are encouraged to use `--protocol=https`.
 
 Consumers who are trusting images based on a property of the Merkle tree (e.g. [like this][signed-name-assertions]) can safely perform ref-engine discovery and ref-resolution over HTTP, although they may still want to use `--protocol=https` to protect from sniffers.
+
+This project can also build out the binary tool by Go implementation and exec the command line:
+
+```
+$ make oci-discovery
+$ ./oci-discovery --debug resolve example.com/app#1.0
+```
+
+It presents the same stdout as Python interface when discovering the same server.
 
 ## Example: Serving everything from one Nginx server
 
