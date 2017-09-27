@@ -1,6 +1,6 @@
 # Discovery Tools
 
-## Example:
+## Example
 
 ```
 $ oci-discovery --debug resolve example.com/app#1.0 2>/tmp/log
