@@ -1,0 +1,8 @@
+{
+  "refEngines": [
+    {
+      "protocol": "oci-index-template-v1",
+      "uri": "https://{host}/oci-index/{path}"
+    }
+  ]
+}
