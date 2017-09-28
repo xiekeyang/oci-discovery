@@ -1,6 +1,17 @@
 # Discovery Tools
 
+This is a Go interface implementation to resolve image names potential [Merkle roots](../glossary.md#merkle-root).
+
+## Build
+
+Build the oci-discovery executable from the project root with:
+```
+$ make oci-discovery
+```
+
 ## Example
+
+Execute the subcommand `resolve` in `oci-discovery` with the example [Nginx server](../contrib/nginx):
 
 ```
 $ oci-discovery --debug resolve example.com/app#1.0 2>/tmp/log
