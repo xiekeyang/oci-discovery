@@ -1,0 +1,14 @@
+{
+  "refEngines": [
+    {
+      "protocol": "oci-index-template-v1",
+      "uri": "https://{host}/oci-image/{path}/index.json"
+    }
+  ],
+  "casEngines": [
+    {
+      "protocol": "oci-cas-template-v1",
+      "uri": "https://example.com/oci-image/{path}/blobs/{algorithm}/{encoded}"
+    }
+  ]
+}

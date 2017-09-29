@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "manifests": [
+    {
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "size": 799,
+      "digest": "sha256:e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3",
+      "platform": {
+        "architecture": "ppc64le",
+        "os": "linux"
+      },
+      "annotations": {
+        "org.opencontainers.image.ref.name": "1.0"
+      },
+      "casEngines": [
+        {
+          "protocol": "oci-cas-template-v1",
+          "uri": "https://example.com/oci-cas/{algorithm}/{encoded:2}/{encoded}"
+        }
+      ]
+    }
+  ]
+}
