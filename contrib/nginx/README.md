@@ -13,7 +13,7 @@ That [index][] is served from `/srv/example.com/oci-index/app` with example cont
 The `org.opencontainers.image.ref.name` value in [the example index](example.com/oci-index/app) assumes consumers will only be attempting to match the `fragment` and not the full image name; image-spec does not currently provide guidance on this point.
 
 The `casEngines` entry in [the example index](example.com/oci-index/app) suggests consumers retrieve CAS blobs from `https://example.com/oci-cas/{algorithm}/{encoded:2}/{encoded}`.
-Supply those blobs at `/srv/example.com/oci-cas/{alg}/{prefix}/{encoded:2}/{encoded}`.
+Supply those blobs at `/srv/example.com/oci-cas/{algorithm}/{encoded:2}/{encoded}`.
 For example `sha256:e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3` is at [`/srv/example.com/oci-cas/sha256/e9/e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3`](example.com/oci-cas/sha256/e9/e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3).
 It would be more conformant [if that content was canonical JSON][image-spec-canonical-json], but I've added newlines and indents to make the example more readable.
 
