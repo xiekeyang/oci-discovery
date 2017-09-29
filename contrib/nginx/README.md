@@ -17,7 +17,7 @@ Supply those blobs at `/srv/example.com/oci-cas/{alg}/{prefix}/{encoded:2}/{enco
 For example `sha256:e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3` is at [`/srv/example.com/oci-cas/sha256/e9/e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3`](example.com/oci-cas/sha256/e9/e9770a03fbdccdd4632895151a93f9af58bbe2c91fdfaaf73160648d250e6ec3).
 It would be more conformant [if that content was canonical JSON][image-spec-canonical-json], but I've added newlines and indents to make the example more readable.
 
-To publish additional images matching the `example.co/app#…` family of [host-based image names](../../host-based-image-names.md), add their entries to [`/srv/example.com/oci-index/app`](example.com/oci-index/app)'s `manifests` array.
+To publish additional images matching the `example.com/app#…` family of [host-based image names](../../host-based-image-names.md), add their entries to [`/srv/example.com/oci-index/app`](example.com/oci-index/app)'s `manifests` array.
 To publish additional images matching new families (e.g. `example.com/other-app#…`), add their entries to new `/srv/example.com/oci-index/` indexes (e.g. `/srv/example.com/oci-index/other-app`).
 All the CAS blobs can go in the same bucket under `/srv/example.com/oci-cas`, although if you want you can adjust the `casEngines` entries and keep CAS blobs in different buckets.
 
