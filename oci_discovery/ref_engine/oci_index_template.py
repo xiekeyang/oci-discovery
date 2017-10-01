@@ -74,6 +74,7 @@ class Engine(object):
             if (name_parts['fragment'] == '' or
                     name_parts['fragment'] == entry_name):
                 yield {
-                    'uri': fetched['uri'],
+                    'mediaType': 'application/vnd.oci.descriptor.v1+json',
                     'root': entry,
+                    'uri': fetched['uri'],
                 }

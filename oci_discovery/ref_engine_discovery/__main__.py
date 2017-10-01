@@ -18,6 +18,7 @@ import logging
 import sys
 
 from . import resolve
+from . import well_known_uri
 
 
 logging.basicConfig()
@@ -63,13 +64,13 @@ if args.log_level:
 if args.protocol is None:
     args.protocol = ('https', 'http')
 
+engines = [
+    well_known_uri.Engine(protocols=args.protocol, port=args.port),
+]
+
 resolved = {}
 for name in args.names:
-    try:
-        resolved[name] = resolve(
-            name=name, protocols=args.protocol, port=args.port)
-    except ValueError as error:
-        log.error(error)
+    resolved[name] = list(resolve(engines=engines, name=name))
 json.dump(
     resolved,
     sys.stdout,

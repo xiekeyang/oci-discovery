@@ -12,77 +12,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json as __json
 import logging as _logging
-import pprint as _pprint
-import ssl as _ssl
-import urllib.error as _urllib_error
 
-from .. import fetch_json as _fetch_json
-from .. import host_based_image_names as _host_based_image_names
 from .. import ref_engine as _ref_engine
-from . import ancestor_hosts as _ancestor_hosts
 
 
 _LOGGER = _logging.getLogger(__name__)
 
 
-def resolve(name, protocols=('https', 'http'), port=None):
-    """Resolve an image name to a Merkle root.
+class RefEngineReference(object):
+    def __init__(self, config, cas_engines=None, uri=None):
+        self.config = config
+        if cas_engines is None:
+            cas_engines = []
+        self.cas_engines = cas_engines
+        self.uri = uri
 
-    Implementing well-known-uri-ref-engine-discovery.md
-    """
-    name_parts = _host_based_image_names.parse(name=name)
-    for protocol in protocols:
-        for host in _ancestor_hosts.ancestor_hosts(host=name_parts['host']):
-            if port:
-                host = '{}:{}'.format(host, port)
-            uri = '{}://{}/.well-known/oci-host-ref-engines'.format(
-                protocol, host)
-            _LOGGER.debug('discovering ref engines via {}'.format(uri))
+    def dict(self):
+        data = {'config': self.config}
+        if self.cas_engines:
+            data['casEngines'] = self.cas_engines
+        if self.uri:
+            data['uri'] = self.uri
+        return data
+
+
+def resolve(engines, name):
+    for engine in engines:
+        for engine_reference in engine.ref_engines(name=name):
             try:
-                fetched = _fetch_json.fetch(
-                    uri=uri,
-                    media_type='application/vnd.oci.ref-engines.v1+json')
-            except (_ssl.CertificateError,
-                    _ssl.SSLError,
-                    _urllib_error.URLError) as error:
-                _LOGGER.warning('failed to fetch {} ({})'.format(uri, error))
+                ref_engine = _ref_engine.new(
+                    base=engine_reference.uri, **engine_reference.config)
+            except KeyError as error:
+                _LOGGER.warning(error)
                 continue
-            ref_engines_object = fetched['json']
-            _LOGGER.debug('received ref-engine discovery object:\n{}'.format(
-                _pprint.pformat(ref_engines_object)))
-            if not isinstance(ref_engines_object, dict):
-                _LOGGER.warning(
-                    '{} claimed to return application/vnd.oci.ref-engines.v1+json but actually returned {}'
-                    .format(uri, ref_engines_object),
-                )
-                continue
-            for ref_engine_object in ref_engines_object.get('refEngines', []):
-                try:
-                    ref_engine = _ref_engine.new(base=fetched['uri'], **ref_engine_object)
-                except KeyError as error:
-                    _LOGGER.warning(error)
-                    continue
-                try:
-                    roots = list(ref_engine.resolve(name=name))
-                except (_ssl.CertificateError, _ssl.SSLError) as error:
-                    _LOGGER.warning(
-                        'failed to resolve {!r} via {} ({})'.format(
-                            name, ref_engine, error))
-                    continue
-                except _urllib_error.HTTPError as error:
-                    _LOGGER.warning('failed to fetch {} ({})'.format(
-                        error.geturl(), error))
-                    continue
-                except Exception as error:
-                    _LOGGER.warning(error)
-                    continue
-                if roots:
-                    data = {'roots': roots}
-                    if 'casEngines' in ref_engines_object:
-                        data['casEngines'] = ref_engines_object['casEngines']
-                    return data
-                else:
-                    _LOGGER.debug('{} returned no results for {}'.format(
-                        ref_engine, name))
-    raise ValueError('no Merkle root found for {!r}'.format(name))
+            try:
+                found_root = False
+                for root in ref_engine.resolve(name=name):
+                    found_root = True
+                    if engine_reference.cas_engines:
+                        if 'casEngines' in root:
+                            root['casEngines'] = list(root['casEngines'])
+                        else:
+                            root['casEngines'] = []
+                        root['casEngines'].extend(engine_reference.cas_engines)
+                    yield root
+            except Exception as error:
+                _LOGGER.warning(error)
+                raise
+                #continue
+            if not found_root:
+                _LOGGER.debug('{} returned no results for {}'.format(
+                    ref_engine, name))

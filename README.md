@@ -4,7 +4,7 @@ This repository contains two [ref-engine discovery](glossary.md#ref-engine-disco
 
 * [OCI Well Known URI Ref-Engine Discovery](well-known-uri-ref-engine-discovery.md).
     There is a [Go][] implementation in [`tools/refenginediscovery/wellknownuri`](tools/refenginediscovery/wellknownuri).
-    There is a [Python 3][python3] implementation in [`oci_discovery.ref_engine_discovery`](oci_discovery/ref_engine_discovery).
+    There is a [Python 3][python3] implementation in [`oci_discovery.ref_engine_discovery.well_known_uri`](oci_discovery/ref_engine_discovery/well_known_uri.py).
 * [OCI XDG Ref-Engine Discovery](xdg-ref-engine-discovery.md).
     There is a Go implementation in [`tools/refenginediscovery/xdg`](tools/refenginediscovery/xdg).
 
