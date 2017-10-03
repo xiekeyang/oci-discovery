@@ -106,7 +106,11 @@ class TestEngine(unittest.TestCase):
                 self.assertEqual(
                     resolved,
                     [
-                        {'uri': responseURI, 'root': root}
+                        {
+                            'mediaType': 'application/vnd.oci.descriptor.v1+json',
+                            'root': root,
+                            'uri': responseURI,
+                        }
                         for root in expected
                     ])
 
@@ -216,4 +220,11 @@ class TestEngine(unittest.TestCase):
                         media_type='application/vnd.oci.image.index.v1+json')
                 self.assertEqual(
                     resolved,
-                    [{'uri': expected, 'root': root} for root in response['manifests']])
+                    [
+                        {
+                            'mediaType': 'application/vnd.oci.descriptor.v1+json',
+                            'root': root,
+                            'uri': expected,
+                        }
+                        for root in response['manifests']
+                    ])
