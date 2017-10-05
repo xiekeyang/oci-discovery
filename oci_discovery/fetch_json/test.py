@@ -37,8 +37,9 @@ class ContextManager(object):
 
 
 class HTTPResponse(object):
-    def __init__(self, url, code=200, body=None, headers=None):
+    def __init__(self, url, redirect=None, code=200, body=None, headers=None):
         self._url = url
+        self._redirect = redirect
         self.code = code
         self._body = body
         self.headers = email.message.Message()
@@ -46,6 +47,8 @@ class HTTPResponse(object):
             self.headers[key] = value
 
     def geturl(self):
+        if self._redirect:
+            return self._redirect
         return self._url
 
     def read(self):
@@ -144,3 +147,20 @@ class TestFetchJSON(unittest.TestCase):
                         return_value=response):
                     self.assertRaisesRegex(
                         error, regex, fetch, 'https://example.com')
+
+    def test_redirect(self):
+        initial_uri = 'https://example.com'
+        final_uri = 'https://example.com/redirect'
+        response = HTTPResponse(
+            url=initial_uri,
+            redirect=final_uri,
+            body=b'{}',
+            headers={
+                'Content-Type': 'application/json; charset=UTF-8',
+            },
+        )
+        with ContextManager(
+                target='oci_discovery.fetch_json._urllib_request.urlopen',
+                return_value=response):
+            fetched = fetch(uri=initial_uri)
+        self.assertEqual(fetched, {'uri': final_uri, 'json': expected})
