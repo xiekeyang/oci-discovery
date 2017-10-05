@@ -172,6 +172,7 @@ class TestURITemplate(unittest.TestCase):
                             self.fail(
                                 msg="entries in both 'exceptions' and 'wrong_values'.  Pick one.")
                         obj = cls(uri=template)
+                        self.assertEqual(str(obj), template)
                         try:
                             expanded = obj.expand(**variables)
                         except Exception as error:
