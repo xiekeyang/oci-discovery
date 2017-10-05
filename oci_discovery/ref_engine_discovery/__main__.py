@@ -19,6 +19,7 @@ import sys
 
 from . import resolve
 from . import well_known_uri
+from . import xdg
 
 
 logging.basicConfig()
@@ -65,6 +66,7 @@ if args.protocol is None:
     args.protocol = ('https', 'http')
 
 engines = [
+    xdg.Engine(),
     well_known_uri.Engine(protocols=args.protocol, port=args.port),
 ]
 

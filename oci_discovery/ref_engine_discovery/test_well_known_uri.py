@@ -142,7 +142,7 @@ class TestResolve(unittest.TestCase):
                         'ref-engine discovery not a JSON object',
                         'example.com/a',
                         [],
-                        r'WARNING:oci_discovery\.ref_engine_discovery\.well_known_uri:https://example.com/\.well-known/oci-host-ref-engines claimed to return application/vnd\.oci\.ref-engines\.v1\+json but actually returned \[]',
+                        r'WARNING:oci_discovery\.ref_engine_discovery\.well_known_uri:https://x.example.com/y claimed to return application/vnd\.oci\.ref-engines\.v1\+json but actually returned \[]',
                     ),
                 ]:
             with self.subTest(label=label):
