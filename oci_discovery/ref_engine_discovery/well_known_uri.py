@@ -20,7 +20,7 @@ import urllib.error as _urllib_error
 from .. import fetch_json as _fetch_json
 from .. import host_based_image_names as _host_based_image_names
 from . import ancestor_hosts as _ancestor_hosts
-from . import RefEngineReference as _RefEngineReference
+from . import yield_from_ref_engines_object as _yield_from_ref_engines_object
 
 
 _LOGGER = _logging.getLogger(__name__)
@@ -67,23 +67,11 @@ class Engine(object):
                     'received ref-engine discovery object:\n{}'.format(
                         _pprint.pformat(ref_engines_object)))
                 hosts.add(host)
-                if not isinstance(ref_engines_object, dict):
-                    _LOGGER.warning(
-                        '{} claimed to return {} but actually returned {}'
-                        .format(uri, media_type, ref_engines_object),
-                    )
-                    continue
-                cas_engines = [
-                    {
-                        'config': cas_engine,
-                        'uri': fetched['uri'],
-                    }
-                    for cas_engine in ref_engines_object.get('casEngines', [])
-                ]
-                for ref_engine_config in ref_engines_object.get(
-                    'refEngines', []):
-                    yield _RefEngineReference(
-                        config=ref_engine_config,
-                        cas_engines=cas_engines,
+                try:
+                    yield from _yield_from_ref_engines_object(
+                        ref_engines_object=ref_engines_object,
                         uri=fetched['uri'],
                     )
+                except ValueError as error:
+                    _LOGGER.warning(error)
+                    continue
