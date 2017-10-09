@@ -12,23 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy as _copy
+import unittest
+
+from . import new
 
 
-class Engine(object):
-    """Dummy ref engine for testing.
+class TestNew(unittest.TestCase):
+    def test_good(self):
+        uri = 'https://{host}/ref/{name}'
+        engine = new(
+            protocol='oci-index-template-v1',
+            uri=uri)
+        self.assertEqual(
+            str(engine),
+            '<oci_discovery.ref_engine.oci_index_template.Engine uri={}>'
+                .format(uri))
 
-    So we don't have to hit the network to test resolution.
-    """
-    def __str__(self):
-        return '<{}.{} response={}>'.format(
-            self.__class__.__module__,
-            self.__class__.__name__,
-            self._response)
-
-    def __init__(self, response, base=None):
-        self._response = response
-        self.base = base
-
-    def resolve(self, name):
-        return _copy.deepcopy(self._response)
+    def test_bad(self):
+        self.assertRaisesRegex(
+            ValueError,
+            "unsupported ref-engine protocol 'unregistered'",
+            new,
+            protocol='unregistered')
