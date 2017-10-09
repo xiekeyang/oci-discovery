@@ -163,4 +163,4 @@ class TestFetchJSON(unittest.TestCase):
                 target='oci_discovery.fetch_json._urllib_request.urlopen',
                 return_value=response):
             fetched = fetch(uri=initial_uri)
-        self.assertEqual(fetched, {'uri': final_uri, 'json': expected})
+        self.assertEqual(fetched, {'uri': final_uri, 'json': {}})
