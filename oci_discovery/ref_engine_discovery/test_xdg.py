@@ -131,9 +131,9 @@ class TestEngine(unittest.TestCase):
 
     def test_load_config_good(self):
         def path_generator(path=None):
-            for filename in ['short', 'long']:
+            for filename in ['short', 'missing-file', 'long']:
                 yield os.path.join(xdg.ROOT, filename)
-        short, long = list(path_generator())
+        short, _, long = list(path_generator())
         with unittest.mock.patch(
                 target='oci_discovery.ref_engine_discovery.xdg.config_paths',
                 new=path_generator):
