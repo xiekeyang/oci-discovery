@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import dummy as _dummy
 from . import oci_index_template as _oci_index_template
 
 # Registry for ref engines, based on ref-engine-protocols.md.
 CONSTRUCTORS = {
-    '_dummy': _dummy.Engine,
     'oci-index-template-v1': _oci_index_template.Engine,
 }
 
