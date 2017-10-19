@@ -25,7 +25,6 @@ import (
 	"github.com/xiekeyang/oci-discovery/tools/engine"
 	"github.com/xiekeyang/oci-discovery/tools/hostbasedimagenames"
 	"github.com/xiekeyang/oci-discovery/tools/refenginediscovery"
-	"github.com/xiekeyang/oci-discovery/tools/refenginediscovery/xdg"
 	"golang.org/x/net/context"
 )
 
@@ -46,12 +45,12 @@ func New(ctx context.Context, protocols []string) (engine refenginediscovery.Eng
 }
 
 // RefEngines calculates ref engines using OCI Ref-Engine Discovery
-// and calls refEngineCallback on each one.  RefEngines returns any
-// errors returned by refEngineCallback and aborts further iteration.
-// Other errors (e.g. in fetching a ref-engine discovery object from a
-// particular protocol/host pair) generate logged warnings but are
-// otherwise ignored.
-func (eng *Engine) RefEngines(ctx context.Context, name string, refEngineCallback refenginediscovery.RefEngineCallback) (err error) {
+// and calls callback on each one.  RefEngines returns any errors
+// returned by callback and aborts further iteration.  Other errors
+// (e.g. in fetching a ref-engine discovery object from a particular
+// protocol/host pair) generate logged warnings but are otherwise
+// ignored.
+func (eng *Engine) RefEngines(ctx context.Context, name string, callback refenginediscovery.RefEngineReferenceCallback) (err error) {
 	parsedName, err := hostbasedimagenames.Parse(name)
 	if err != nil {
 		logrus.Warn(err)
@@ -81,14 +80,14 @@ func (eng *Engine) RefEngines(ctx context.Context, name string, refEngineCallbac
 			}
 		}
 		for _, config := range reference.Engines.RefEngines {
-			ref := refenginediscovery.Reference{
+			ref := refenginediscovery.RefEngineReference{
 				Config: engine.Reference{
 					Config: config,
 					URI:    reference.URI,
 				},
 				CASEngines: casEngines,
 			}
-			err = refEngineCallback(ctx, ref)
+			err = callback(ctx, ref)
 			if err != nil {
 				return err
 			}
@@ -103,7 +102,7 @@ func (eng *Engine) Close(ctx context.Context) (err error) {
 	return nil
 }
 
-func (eng *Engine) fetch(ctx context.Context, uri *url.URL) (ref *xdg.Reference, err error) {
+func (eng *Engine) fetch(ctx context.Context, uri *url.URL) (ref *refenginediscovery.RefEnginesReference, err error) {
 	request := &http.Request{
 		Method: "GET",
 		URL:    uri,
@@ -134,7 +133,7 @@ func (eng *Engine) fetch(ctx context.Context, uri *url.URL) (ref *xdg.Reference,
 		return nil, fmt.Errorf("requested %s from %s but got %s", request.Header.Get(`Accept`), request.URL, mediatype)
 	}
 
-	ref = &xdg.Reference{
+	ref = &refenginediscovery.RefEnginesReference{
 		URI: uri, // FIXME: get URI after any redirects
 	}
 	if err := json.NewDecoder(response.Body).Decode(&ref.Engines); err != nil {
