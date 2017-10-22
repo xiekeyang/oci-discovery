@@ -37,7 +37,7 @@ func ResolveName(ctx context.Context, engines []Engine, name string, resolvedNam
 		err = engine.RefEngines(
 			ctx,
 			name,
-			func(ctx context.Context, refEngine Reference) (err error) {
+			func(ctx context.Context, refEngine RefEngineReference) (err error) {
 				constructor, ok := refengine.Constructors[refEngine.Config.Config.Protocol]
 				if !ok {
 					logrus.Debugf("unsupported ref-engine protocol %q (%v)", refEngine.Config.Config.Protocol, refengine.Constructors)

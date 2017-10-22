@@ -43,21 +43,21 @@ func TestRefEnginesGood(t *testing.T) {
 	ctx := context.Background()
 	for _, testcase := range []struct {
 		label            string
-		regexpRefEngines map[string]Reference
+		regexpRefEngines map[string]refenginediscovery.RefEnginesReference
 		name             string
-		expected         []refenginediscovery.Reference
+		expected         []refenginediscovery.RefEngineReference
 	}{
 		{
 			label:            "nil regexpRefEngines",
 			regexpRefEngines: nil,
 			name:             "example",
-			expected:         []refenginediscovery.Reference{},
+			expected:         []refenginediscovery.RefEngineReference{},
 		},
 		{
 			label: "no matching regexps",
-			regexpRefEngines: map[string]Reference{
-				"^app$": Reference{
-					Engines: Engines{
+			regexpRefEngines: map[string]refenginediscovery.RefEnginesReference{
+				"^app$": refenginediscovery.RefEnginesReference{
+					Engines: refenginediscovery.Engines{
 						RefEngines: []engine.Config{
 							engine.Config{
 								Protocol: "oci-image-template-v1",
@@ -74,13 +74,13 @@ func TestRefEnginesGood(t *testing.T) {
 				},
 			},
 			name:     "example",
-			expected: []refenginediscovery.Reference{},
+			expected: []refenginediscovery.RefEngineReference{},
 		},
 		{
 			label: "single matching regexp with one ref-engine config",
-			regexpRefEngines: map[string]Reference{
-				"^app$": Reference{
-					Engines: Engines{
+			regexpRefEngines: map[string]refenginediscovery.RefEnginesReference{
+				"^app$": refenginediscovery.RefEnginesReference{
+					Engines: refenginediscovery.Engines{
 						RefEngines: []engine.Config{
 							engine.Config{
 								Protocol: "oci-image-template-v1",
@@ -97,8 +97,8 @@ func TestRefEnginesGood(t *testing.T) {
 				},
 			},
 			name: "app",
-			expected: []refenginediscovery.Reference{
-				refenginediscovery.Reference{
+			expected: []refenginediscovery.RefEngineReference{
+				refenginediscovery.RefEngineReference{
 					Config: engine.Reference{
 						Config: engine.Config{
 							Protocol: "oci-image-template-v1",
@@ -116,9 +116,9 @@ func TestRefEnginesGood(t *testing.T) {
 		},
 		{
 			label: "single matching regexp with one ref-engine and one CAS-engine config",
-			regexpRefEngines: map[string]Reference{
-				"^app$": Reference{
-					Engines: Engines{
+			regexpRefEngines: map[string]refenginediscovery.RefEnginesReference{
+				"^app$": refenginediscovery.RefEnginesReference{
+					Engines: refenginediscovery.Engines{
 						RefEngines: []engine.Config{
 							engine.Config{
 								Protocol: "oci-image-template-v1",
@@ -143,8 +143,8 @@ func TestRefEnginesGood(t *testing.T) {
 				},
 			},
 			name: "app",
-			expected: []refenginediscovery.Reference{
-				refenginediscovery.Reference{
+			expected: []refenginediscovery.RefEngineReference{
+				refenginediscovery.RefEngineReference{
 					Config: engine.Reference{
 						Config: engine.Config{
 							Protocol: "oci-image-template-v1",
@@ -176,9 +176,9 @@ func TestRefEnginesGood(t *testing.T) {
 		},
 		{
 			label: "two matching regexps of different length",
-			regexpRefEngines: map[string]Reference{
-				"^app$": Reference{
-					Engines: Engines{
+			regexpRefEngines: map[string]refenginediscovery.RefEnginesReference{
+				"^app$": refenginediscovery.RefEnginesReference{
+					Engines: refenginediscovery.Engines{
 						RefEngines: []engine.Config{
 							engine.Config{
 								Protocol: "oci-image-template-v1",
@@ -201,8 +201,8 @@ func TestRefEnginesGood(t *testing.T) {
 						Host:   "example.com",
 					},
 				},
-				"^ap.*$": Reference{
-					Engines: Engines{
+				"^ap.*$": refenginediscovery.RefEnginesReference{
+					Engines: refenginediscovery.Engines{
 						RefEngines: []engine.Config{
 							engine.Config{
 								Protocol: "oci-image-template-v1",
@@ -219,8 +219,8 @@ func TestRefEnginesGood(t *testing.T) {
 				},
 			},
 			name: "app",
-			expected: []refenginediscovery.Reference{
-				refenginediscovery.Reference{
+			expected: []refenginediscovery.RefEngineReference{
+				refenginediscovery.RefEngineReference{
 					Config: engine.Reference{
 						Config: engine.Config{
 							Protocol: "oci-image-template-v1",
@@ -234,7 +234,7 @@ func TestRefEnginesGood(t *testing.T) {
 						},
 					},
 				},
-				refenginediscovery.Reference{
+				refenginediscovery.RefEngineReference{
 					Config: engine.Reference{
 						Config: engine.Config{
 							Protocol: "oci-image-template-v1",
@@ -266,9 +266,9 @@ func TestRefEnginesGood(t *testing.T) {
 		},
 		{
 			label: "two matching regexps of same length",
-			regexpRefEngines: map[string]Reference{
-				"^ap.$": Reference{
-					Engines: Engines{
+			regexpRefEngines: map[string]refenginediscovery.RefEnginesReference{
+				"^ap.$": refenginediscovery.RefEnginesReference{
+					Engines: refenginediscovery.Engines{
 						RefEngines: []engine.Config{
 							engine.Config{
 								Protocol: "oci-image-template-v1",
@@ -291,8 +291,8 @@ func TestRefEnginesGood(t *testing.T) {
 						Host:   "example.com",
 					},
 				},
-				"^app$": Reference{
-					Engines: Engines{
+				"^app$": refenginediscovery.RefEnginesReference{
+					Engines: refenginediscovery.Engines{
 						RefEngines: []engine.Config{
 							engine.Config{
 								Protocol: "oci-image-template-v1",
@@ -309,8 +309,8 @@ func TestRefEnginesGood(t *testing.T) {
 				},
 			},
 			name: "app",
-			expected: []refenginediscovery.Reference{
-				refenginediscovery.Reference{
+			expected: []refenginediscovery.RefEngineReference{
+				refenginediscovery.RefEngineReference{
 					Config: engine.Reference{
 						Config: engine.Config{
 							Protocol: "oci-image-template-v1",
@@ -338,7 +338,7 @@ func TestRefEnginesGood(t *testing.T) {
 						},
 					},
 				},
-				refenginediscovery.Reference{
+				refenginediscovery.RefEngineReference{
 					Config: engine.Reference{
 						Config: engine.Config{
 							Protocol: "oci-image-template-v1",
@@ -356,9 +356,9 @@ func TestRefEnginesGood(t *testing.T) {
 		},
 		{
 			label: "invalid regexp ignored",
-			regexpRefEngines: map[string]Reference{
-				"[": Reference{
-					Engines: Engines{
+			regexpRefEngines: map[string]refenginediscovery.RefEnginesReference{
+				"[": refenginediscovery.RefEnginesReference{
+					Engines: refenginediscovery.Engines{
 						RefEngines: []engine.Config{
 							engine.Config{
 								Protocol: "oci-image-template-v1",
@@ -373,8 +373,8 @@ func TestRefEnginesGood(t *testing.T) {
 						Host:   "example.com",
 					},
 				},
-				"^app$": Reference{
-					Engines: Engines{
+				"^app$": refenginediscovery.RefEnginesReference{
+					Engines: refenginediscovery.Engines{
 						RefEngines: []engine.Config{
 							engine.Config{
 								Protocol: "oci-image-template-v1",
@@ -391,8 +391,8 @@ func TestRefEnginesGood(t *testing.T) {
 				},
 			},
 			name: "app",
-			expected: []refenginediscovery.Reference{
-				refenginediscovery.Reference{
+			expected: []refenginediscovery.RefEngineReference{
+				refenginediscovery.RefEngineReference{
 					Config: engine.Reference{
 						Config: engine.Config{
 							Protocol: "oci-image-template-v1",
@@ -410,8 +410,8 @@ func TestRefEnginesGood(t *testing.T) {
 		},
 	} {
 		t.Run(testcase.label, func(t *testing.T) {
-			refEngines := []refenginediscovery.Reference{}
-			err := RefEngines(ctx, testcase.regexpRefEngines, testcase.name, func(ctx context.Context, refEngine refenginediscovery.Reference) error {
+			refEngines := []refenginediscovery.RefEngineReference{}
+			err := RefEngines(ctx, testcase.regexpRefEngines, testcase.name, func(ctx context.Context, refEngine refenginediscovery.RefEngineReference) error {
 				refEngines = append(refEngines, refEngine)
 				return nil
 			})
@@ -426,9 +426,9 @@ func TestRefEnginesGood(t *testing.T) {
 
 func TestRefEnginesCallbackError(t *testing.T) {
 	ctx := context.Background()
-	regexpRefEngines := map[string]Reference{
-		"^app$": Reference{
-			Engines: Engines{
+	regexpRefEngines := map[string]refenginediscovery.RefEnginesReference{
+		"^app$": refenginediscovery.RefEnginesReference{
+			Engines: refenginediscovery.Engines{
 				RefEngines: []engine.Config{
 					engine.Config{
 						Protocol: "oci-image-template-v1",
@@ -445,7 +445,7 @@ func TestRefEnginesCallbackError(t *testing.T) {
 		},
 	}
 	testError := fmt.Errorf("testing")
-	err := RefEngines(ctx, regexpRefEngines, "app", func(ctx context.Context, refEngine refenginediscovery.Reference) error {
+	err := RefEngines(ctx, regexpRefEngines, "app", func(ctx context.Context, refEngine refenginediscovery.RefEngineReference) error {
 		return testError
 	})
 	assert.Equal(t, testError, err)
