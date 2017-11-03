@@ -34,9 +34,9 @@ For example, if the `host` extracted from the image name is `a.b.example.com` an
 
 ## Ref-engines media types
 
-Servers supporting the [`oci-host-ref-engines` URI](#oci-host-ref-engines-well-known-uri-registration) MUST support requests for media type [`application/vnd.oci.ref-engines.v1+json`](xdg-ref-engines-discovery.md#ref-engines-objects).
+Servers supporting the [`oci-host-ref-engines` URI](#oci-host-ref-engines-well-known-uri-registration) MUST support requests for media type [`application/vnd.oci.ref-engines.v1+json`](xdg-ref-engine-discovery.md#ref-engines-objects).
 Servers MAY support other media types using HTTP content negotiation, as described in [RFC 7231 section 3.4][rfc7231-s3.4] (which is [also supported over HTTP/2][rfc7540-s8]).
-For example, servers MAY support [`application/vnd.oci.regexp-ref-engines.v1+json`](xdg-ref-engines-discovery.md#regexp-ref-engines-objects) to provide more targetted suggestions about specific subsets of image names.
+For example, servers MAY support [`application/vnd.oci.regexp-ref-engines.v1+json`](xdg-ref-engine-discovery.md#regexp-ref-engines-objects) to provide more targetted suggestions about specific subsets of image names.
 
 ### Example 1
 

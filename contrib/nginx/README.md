@@ -24,7 +24,7 @@ All the CAS blobs can go in the same bucket under `/srv/example.com/oci-cas`, al
 ## Example: Serving OCI layouts from Nginx
 
 As an alternative to the [previous example](#serving-everything-from-one-nginx-server), you can bucket your CAS blobs by serving [OCI layouts][layout] directly.
-If your layout `index.json` are not setting `casEngines` and you are unwilling to update them to do so, you can [set `casEngines` in you ref-engines object](../../xdg-ref-engines-discovery.md#ref-engines-objects) at `/srv/example.com/.well-known/oci-host-ref-engines` with example content like [this](layouts/example.com/.well-known/oci-host-ref-engines).
+If your layout `index.json` are not setting `casEngines` and you are unwilling to update them to do so, you can [set `casEngines` in you ref-engines object](../../xdg-ref-engine-discovery.md#ref-engines-objects) at `/srv/example.com/.well-known/oci-host-ref-engines` with example content like [this](layouts/example.com/.well-known/oci-host-ref-engines).
 
 Then copy your [layout directories][layout] under `/srv/example.com/oci-image/{path}` to deploy them (like [this](layouts/example.com/oci-image)).
 
