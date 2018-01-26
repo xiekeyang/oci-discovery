@@ -50,9 +50,7 @@ $ curl -H 'Accept: application/vnd.oci.ref-engines.v1+json' https://a.b.example.
     },
     {
       "protocol": "docker",
-      "uri": "https://index.docker.io/v2",
-      "authUri": "https://auth.docker.io/token",
-      "authService": "registry.docker.io",
+      "uri": "https://index.docker.io/v2"
     }
   ]
 }
